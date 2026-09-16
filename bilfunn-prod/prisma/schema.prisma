@@ -1,0 +1,250 @@
+// Bilfunn — data model
+// Design notes:
+//  * Vehicle/owner payloads are NEVER persisted. Only the plate, the outcome and
+//    timings are stored, so a search log can be produced without hoarding
+//    personal data about third parties.
+//  * Money is stored in øre (integer) to avoid float rounding.
+//  * The subscription table is the single source of truth for access. Provider
+//    webhooks update it; the app never asks Stripe/Vipps at page load.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+enum Role {
+  CUSTOMER
+  ADMIN
+}
+
+enum SubStatus {
+  TRIALING
+  ACTIVE
+  PAST_DUE
+  CANCELED
+  EXPIRED
+}
+
+enum PaymentKind {
+  INTRO
+  RENEWAL
+  RETRY
+}
+
+enum PaymentStatus {
+  PENDING
+  SUCCEEDED
+  FAILED
+  REFUNDED
+}
+
+enum Provider {
+  MOCK
+  STRIPE
+  VIPPS
+}
+
+model User {
+  id            String         @id @default(cuid())
+  email         String         @unique
+  role          Role           @default(CUSTOMER)
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  deletedAt     DateTime?
+  lastLoginAt   DateTime?
+  locale        String         @default("nb")
+  subscriptions Subscription[]
+  payments      Payment[]
+  searches      Search[]
+  loginTokens   LoginToken[]
+  emails        EmailLog[]
+
+  @@index([email])
+}
+
+model Subscription {
+  id        String    @id @default(cuid())
+  userId    String
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  status    SubStatus @default(TRIALING)
+  provider  Provider  @default(MOCK)
+
+  // provider handles
+  providerCustomerId     String?
+  providerSubscriptionId String?  @unique
+  providerAgreementId    String?  @unique // Vipps recurring agreement
+  paymentBrand           String? // "visa", "vipps"
+  paymentLast4           String?
+
+  priceOre   Int      @default(24900)
+  startedAt  DateTime @default(now())
+  periodStart DateTime @default(now())
+  periodEnd  DateTime
+  cancelAt   DateTime?
+  canceledAt DateTime?
+  cancelReason String?
+  endedAt    DateTime?
+
+  failedAttempts Int       @default(0)
+  nextRetryAt    DateTime?
+  graceUntil     DateTime?
+  reminderSentAt DateTime?
+
+  searchesThisPeriod Int @default(0)
+  renewals           Int @default(0)
+
+  payments  Payment[]
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  @@index([userId])
+  @@index([status, periodEnd])
+  @@index([status, nextRetryAt])
+}
+
+model Payment {
+  id             String        @id @default(cuid())
+  userId         String
+  user           User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  subscriptionId String?
+  subscription   Subscription? @relation(fields: [subscriptionId], references: [id], onDelete: SetNull)
+
+  kind      PaymentKind
+  status    PaymentStatus @default(PENDING)
+  provider  Provider
+  amountOre Int
+  vatOre    Int
+  currency  String        @default("NOK")
+
+  receiptNumber     String  @unique
+  providerPaymentId String?
+  failureCode       String?
+  refundedOre       Int     @default(0)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+  @@index([status, createdAt])
+}
+
+model Search {
+  id        String   @id @default(cuid())
+  userId    String?
+  user      User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  plate     String
+  result    String // FOUND | NOT_FOUND | PROVIDER_ERROR | RATE_LIMITED
+  latencyMs Int      @default(0)
+  counted   Boolean  @default(false)
+  ipHash    String? // hashed, never the raw IP
+  createdAt DateTime @default(now())
+
+  @@index([userId, createdAt])
+  @@index([plate, createdAt])
+  @@index([createdAt])
+}
+
+model LoginToken {
+  id        String   @id @default(cuid())
+  userId    String?
+  user      User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  email     String
+  codeHash  String
+  tokenHash String   @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+  attempts  Int      @default(0)
+  createdAt DateTime @default(now())
+
+  @@index([email])
+}
+
+model EmailLog {
+  id        String   @id @default(cuid())
+  userId    String?
+  user      User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  to        String
+  type      String
+  subject   String
+  body      String   @db.Text
+  provider  String   @default("console")
+  sentAt    DateTime?
+  error     String?
+  createdAt DateTime @default(now())
+
+  @@index([createdAt])
+}
+
+model Event {
+  id        String   @id @default(cuid())
+  name      String
+  props     Json     @default("{}")
+  userId    String?
+  sessionId String?
+  createdAt DateTime @default(now())
+
+  @@index([name, createdAt])
+}
+
+model RateLimit {
+  key       String   @id
+  count     Int      @default(0)
+  windowEnd DateTime
+  updatedAt DateTime @updatedAt
+
+  @@index([windowEnd])
+}
+
+model Ticket {
+  id        String   @id @default(cuid())
+  name      String
+  email     String
+  category  String
+  message   String   @db.Text
+  status    String   @default("OPEN")
+  createdAt DateTime @default(now())
+}
+
+model AdminAudit {
+  id        String   @id @default(cuid())
+  actor     String
+  action    String
+  target    String?
+  detail    Json     @default("{}")
+  createdAt DateTime @default(now())
+
+  @@index([createdAt])
+}
+
+// Commercial rules live in the database so support can change them
+// without a deploy. One row, id = "default".
+model Config {
+  id                 String   @id @default("default")
+  introPriceOre      Int      @default(300)
+  renewalPriceOre    Int      @default(24900)
+  introDays          Int      @default(3)
+  introSearchLimit   Int      @default(10)
+  monthlySearchLimit Int      @default(50)
+  duplicatesCount    Boolean  @default(false)
+  cancelKeepsAccess  Boolean  @default(true)
+  graceDays          Int      @default(5)
+  retryDays          Int[]    @default([1, 3, 5])
+  reminderHours      Int      @default(24)
+  ipSearchesPerHour  Int      @default(20)
+  vatBps             Int      @default(2500)
+  ownerDataEnabled   Boolean  @default(false)
+  updatedAt          DateTime @updatedAt
+}
+
+model IdempotencyKey {
+  key       String   @id
+  result    Json?
+  createdAt DateTime @default(now())
+
+  @@index([createdAt])
+}
