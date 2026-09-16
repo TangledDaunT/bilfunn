@@ -33,7 +33,8 @@ links, Vipps redirect URLs and Stripe return URLs are all built from it.
 
 ## 3. Cron
 
-`vercel.json` registers `/api/cron/billing` hourly. Vercel sends
+`vercel.json` registers `/api/cron/billing` daily for Vercel Hobby compatibility.
+On a plan that supports hourly cron jobs, change the schedule to hourly. Vercel sends
 `Authorization: Bearer $CRON_SECRET`; the route rejects anything else. Verify
 after the first deploy:
 

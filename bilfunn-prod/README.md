@@ -87,7 +87,8 @@ Three rules the code follows throughout:
 ## Subscription lifecycle
 
 `TRIALING → ACTIVE → PAST_DUE → EXPIRED`, with `CANCELED` reachable from the first
-three. Driven by `/api/cron/billing` (hourly) plus provider webhooks.
+three. Driven by `/api/cron/billing` (daily on Vercel Hobby; hourly when deployed on a plan
+that supports hourly cron jobs) plus provider webhooks.
 
 - Reminder email goes out `reminderHours` before the first renewal.
 - Vipps charges are created **ahead** of the due date: standard agreements require
