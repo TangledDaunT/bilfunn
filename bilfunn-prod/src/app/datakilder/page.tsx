@@ -1,5 +1,6 @@
 import LegalPage from "@/components/Legal";
-export const metadata = { title: "Om datakildene" };
+import { pageMetadata } from "@/lib/seo";
+export const metadata = pageMetadata("Om datakildene", "Les hvilke datakilder Bilfunn bruker for kjøretøyopplysninger.", "/datakilder");
 
 export default function Sources() {
   return (

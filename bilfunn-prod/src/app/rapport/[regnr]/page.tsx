@@ -12,7 +12,11 @@ import { formatDate } from "@/lib/money";
 import PrintButton from "./PrintButton";
 
 export const dynamic = "force-dynamic";
-export const metadata = { robots: { index: false, follow: false } };
+export const metadata = {
+  title: "Kjøretøyr rapport",
+  description: "Bilfunn kjøretøyr rapport.",
+  robots: { index: false, follow: false },
+};
 
 const Row = ({ label, value }: { label: string; value: React.ReactNode }) =>
   value === null || value === undefined || value === "" ? null : (

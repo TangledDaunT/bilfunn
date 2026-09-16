@@ -1,5 +1,6 @@
 import LegalPage from "@/components/Legal";
-export const metadata = { title: "Angrerett og refusjon" };
+import { pageMetadata } from "@/lib/seo";
+export const metadata = pageMetadata("Angrerett og refusjon", "Les om angrerett, refusjon og hvordan du kontakter Bilfunn.", "/angrerett");
 
 export default function Withdrawal() {
   return (

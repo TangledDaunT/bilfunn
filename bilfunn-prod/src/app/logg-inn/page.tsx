@@ -1,5 +1,6 @@
 import LoginForm from "./LoginForm";
-export const metadata = { title: "Logg inn" };
+import { pageMetadata } from "@/lib/seo";
+export const metadata = pageMetadata("Logg inn", "Logg inn på Bilfunn for å administrere tilgang og abonnement.", "/logg-inn", false);
 export const dynamic = "force-dynamic";
 
 export default function LoginPage({ searchParams }: { searchParams: { token?: string } }) {

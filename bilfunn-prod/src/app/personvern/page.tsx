@@ -1,5 +1,6 @@
 import LegalPage from "@/components/Legal";
-export const metadata = { title: "Personvernerklæring" };
+import { pageMetadata } from "@/lib/seo";
+export const metadata = pageMetadata("Personvernerklæring", "Les hvordan Bilfunn behandler personopplysninger og kjøretøydata.", "/personvern");
 
 export default function Privacy() {
   return (

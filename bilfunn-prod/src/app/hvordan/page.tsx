@@ -1,5 +1,7 @@
 import PlateSearch from "@/components/PlateSearch";
-export const metadata = { title: "Slik virker det" };
+import { pageMetadata } from "@/lib/seo";
+
+export const metadata = pageMetadata("Slik virker det", "Slik søker du på et norsk registreringsnummer og får en kjøretøyr rapport.", "/hvordan");
 
 const STEPS: Array<[string, string]> = [
   ["Søk på registreringsnummeret", "Skriv inn skiltet på forsiden. Vi normaliserer mellomrom og små bokstaver automatisk."],

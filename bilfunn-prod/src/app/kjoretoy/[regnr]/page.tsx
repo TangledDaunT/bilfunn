@@ -23,6 +23,7 @@ export async function generateMetadata({ params }: { params: { regnr: string } }
   return {
     title: `${prettyPlate(plate)} – kjøretøyopplysninger`,
     description: `Se kjøretøy- og eieropplysninger for ${prettyPlate(plate)}.`,
+    alternates: { canonical: `/kjoretoy/${plate}` },
     robots: { index: false, follow: false },
   };
 }

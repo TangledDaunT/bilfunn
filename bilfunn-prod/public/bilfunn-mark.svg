@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 120 84" role="img" aria-labelledby="title">
+  <title>Bilfunn</title>
+  <rect width="120" height="84" rx="10" fill="#fff"/>
+  <rect width="28" height="84" rx="10" fill="#003399"/>
+  <text x="14" y="72" fill="#fff" font-family="Arial,sans-serif" font-size="18" font-weight="700" text-anchor="middle">N</text>
+  <text x="74" y="54" fill="#0a2a55" font-family="Arial,sans-serif" font-size="34" font-weight="700" text-anchor="middle">BF</text>
+</svg>

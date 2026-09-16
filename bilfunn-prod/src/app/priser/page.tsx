@@ -1,9 +1,10 @@
 import Link from "next/link";
 import { getConfig } from "@/lib/config";
 import { formatOre } from "@/lib/money";
-import { Check } from "@/components/icons";
+import { pageMetadata } from "@/lib/seo";
 
-export const metadata = { title: "Priser" };
+export const metadata = pageMetadata("Priser", "Se Bilfunns priser, tilgang og abonnement for kjøretøyopplysninger.", "/priser");
+import { Check } from "@/components/icons";
 export const dynamic = "force-dynamic";
 
 export default async function PricingPage() {

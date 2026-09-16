@@ -1,6 +1,8 @@
 import Link from "next/link";
 import { FAQ_ITEMS } from "@/lib/content";
-export const metadata = { title: "Spørsmål og svar" };
+import { pageMetadata } from "@/lib/seo";
+
+export const metadata = pageMetadata("Spørsmål og svar", "Finn svar på vanlige spørsmål om Bilfunn, søk og abonnement.", "/faq");
 
 export default function FaqPage() {
   return (

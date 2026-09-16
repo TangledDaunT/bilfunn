@@ -16,10 +16,7 @@ export default async function Header() {
       <header className="site-header">
         <div className="bar">
           <Link className="brand" href="/">
-            <span className="brandmark" aria-hidden>
-              <i>N</i>
-              <b>BF</b>
-            </span>
+            <img className="brandmark-image" src="/bilfunn-mark.svg" width="30" height="21" alt="Bilfunn" />
             Bilfunn
           </Link>
           <nav>

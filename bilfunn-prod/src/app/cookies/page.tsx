@@ -1,6 +1,7 @@
 import LegalPage from "@/components/Legal";
 import ResetConsent from "./ResetConsent";
-export const metadata = { title: "Informasjonskapsler" };
+import { pageMetadata } from "@/lib/seo";
+export const metadata = pageMetadata("Informasjonskapsler", "Les hvordan Bilfunn bruker nødvendige informasjonskapsler og samtykke.", "/cookies");
 
 export default function Cookies() {
   return (

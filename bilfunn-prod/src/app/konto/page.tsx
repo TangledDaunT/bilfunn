@@ -8,7 +8,8 @@ import { formatDate, formatOre } from "@/lib/money";
 import AccountActions from "./AccountActions";
 
 export const dynamic = "force-dynamic";
-export const metadata = { title: "Min side", robots: { index: false } };
+import { pageMetadata } from "@/lib/seo";
+export const metadata = pageMetadata("Min side", "Administrer Bilfunn-abonnementet, kvitteringer og søkehistorikk.", "/konto", false);
 
 const STATUS_LABEL: Record<string, string> = {
   TRIALING: "Introduksjonsperiode",

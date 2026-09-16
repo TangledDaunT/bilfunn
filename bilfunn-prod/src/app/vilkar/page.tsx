@@ -1,5 +1,6 @@
 import LegalPage from "@/components/Legal";
-export const metadata = { title: "Vilkår for bruk" };
+import { pageMetadata } from "@/lib/seo";
+export const metadata = pageMetadata("Vilkår for bruk", "Vilkår for søk, tilgang, betaling og abonnement hos Bilfunn.", "/vilkar");
 
 export default function Terms() {
   return (

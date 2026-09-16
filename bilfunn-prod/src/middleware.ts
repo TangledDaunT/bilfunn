@@ -6,6 +6,13 @@ import { NextResponse, type NextRequest } from "next/server";
  * a tag manager: GTM needs its own domain listed.
  */
 export function middleware(request: NextRequest) {
+  const forwardedProto = request.headers.get("x-forwarded-proto");
+  if (forwardedProto === "http" && request.nextUrl.hostname !== "localhost") {
+    const httpsUrl = request.nextUrl.clone();
+    httpsUrl.protocol = "https:";
+    return NextResponse.redirect(httpsUrl, 308);
+  }
+
   const nonce = Buffer.from(crypto.randomUUID()).toString("base64");
   const csp = [
     `default-src 'self'`,

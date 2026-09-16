@@ -67,6 +67,7 @@ main { flex: 1; padding-bottom: 56px; }
 .site-header { background: var(--deep); color: #fff; position: sticky; top: 0; z-index: 40; }
 .site-header .bar { display: flex; align-items: center; gap: 14px; height: 52px; max-width: var(--wide); margin: 0 auto; padding: 0 18px; }
 .brand { display: flex; align-items: center; gap: 9px; color: #fff; text-decoration: none; font-weight: 700; font-size: .98rem; }
+.brandmark-image { width: 30px; height: 21px; object-fit: cover; border-radius: 3px; }
 .brandmark { width: 30px; height: 21px; border-radius: 3px; background: #fff; display: flex; overflow: hidden; box-shadow: 0 0 0 1px rgba(255, 255, 255, .4); }
 .brandmark i { width: 8px; background: var(--plate-blue); color: #fff; font-style: normal; font-size: 6px; font-weight: 700; display: flex; align-items: flex-end; justify-content: center; padding-bottom: 2px; }
 .brandmark b { flex: 1; display: flex; align-items: center; justify-content: center; color: var(--deep); font-size: 10px; letter-spacing: .02em; }
@@ -133,6 +134,11 @@ main { flex: 1; padding-bottom: 56px; }
 .g3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
 @media (max-width: 820px) { .g3 { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 @media (max-width: 560px) { .g2, .g3 { grid-template-columns: 1fr; } }
+@media (max-width: 620px) {
+  .site-header .bar { height: auto; min-height: 52px; padding-top: 8px; padding-bottom: 8px; align-items: flex-start; }
+  .site-header nav { flex-wrap: wrap; justify-content: flex-end; }
+  .site-header nav a { padding: 5px 7px; font-size: .8rem; }
+}
 .rowsplit { display: flex; gap: 14px; align-items: center; justify-content: space-between; flex-wrap: wrap; }
 
 dl.spec { margin: 0; display: grid; grid-template-columns: minmax(130px, 45%) 1fr; }

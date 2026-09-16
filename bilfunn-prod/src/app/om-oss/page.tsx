@@ -1,4 +1,6 @@
-export const metadata = { title: "Om oss" };
+import { pageMetadata } from "@/lib/seo";
+
+export const metadata = pageMetadata("Om oss", "Les om Bilfunn, tjenesten og hvordan kjøretøyopplysninger behandles.", "/om-oss");
 
 export default function AboutPage() {
   return (

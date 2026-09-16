@@ -8,7 +8,8 @@ import { Check } from "@/components/icons";
 import { normalizePlate } from "@/lib/plate";
 
 export const dynamic = "force-dynamic";
-export const metadata = { title: "Betaling bekreftet", robots: { index: false } };
+import { pageMetadata } from "@/lib/seo";
+export const metadata = pageMetadata("Betaling bekreftet", "Kvittering for Bilfunn-tilgang.", "/kvittering", false);
 
 export default async function ReceiptPage({ searchParams }: { searchParams: { nr?: string } }) {
   const user = await getCurrentUser();

@@ -8,7 +8,8 @@ import { getCurrentUser } from "@/lib/session";
 import { availableMethods } from "@/lib/payments";
 
 export const dynamic = "force-dynamic";
-export const metadata = { title: "Fullfør tilgang", robots: { index: false } };
+import { pageMetadata } from "@/lib/seo";
+export const metadata = pageMetadata("Fullfør tilgang", "Fullfør betalingen for Bilfunn-tilgang.", "/kasse", false);
 
 export default async function CheckoutPage({ searchParams }: { searchParams: { nr?: string } }) {
   const plate = normalizePlate(searchParams.nr || "");

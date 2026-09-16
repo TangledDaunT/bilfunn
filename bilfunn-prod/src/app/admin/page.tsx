@@ -8,7 +8,8 @@ import { integrationStatus } from "@/lib/env";
 import ConfigForm from "./ConfigForm";
 
 export const dynamic = "force-dynamic";
-export const metadata = { title: "Admin", robots: { index: false, follow: false } };
+import { pageMetadata } from "@/lib/seo";
+export const metadata = pageMetadata("Administrasjon", "Bilfunns interne administrasjon.", "/admin", false);
 
 const TABS = [
   ["oversikt", "Oversikt"],

@@ -1,5 +1,6 @@
 import ContactForm from "./ContactForm";
-export const metadata = { title: "Kontakt oss" };
+import { pageMetadata } from "@/lib/seo";
+export const metadata = pageMetadata("Kontakt oss", "Kontakt Bilfunn for hjelp med søk, betaling eller abonnement.", "/kontakt");
 
 export default function ContactPage() {
   return (

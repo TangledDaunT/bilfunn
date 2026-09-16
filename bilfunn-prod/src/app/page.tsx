@@ -5,8 +5,14 @@ import { Check, Lock } from "@/components/icons";
 import { getConfig } from "@/lib/config";
 import { formatOre } from "@/lib/money";
 import { FAQ_ITEMS } from "@/lib/content";
+import { pageMetadata } from "@/lib/seo";
 
 export const dynamic = "force-dynamic";
+export const metadata = pageMetadata(
+  "Hvem eier bilen?",
+  "Søk på norsk registreringsnummer og få kjøretøyopplysninger fra Bilfunn.",
+  "/"
+);
 
 const BENEFITS: Array<[string, string]> = [
   ["Eieropplysninger", "Navn og registrert adresse på nåværende eier, der dette er tilgjengelig og lovlig å vise."],
