@@ -1,50 +1,48 @@
 # Bilfunn
 
-Bilfunn is a static prototype for a Norwegian vehicle ownership and information platform. The project is intentionally dependency-free and runs entirely in the browser with simulated data.
+Bilfunn is a lightweight front-end prototype for a Norwegian vehicle ownership and information platform. The app is intentionally built with plain JavaScript and no external dependencies, making it easy to run locally and easy to adapt for a future backend.
 
-## Product overview
+## Included features
 
-- Search by vehicle registration plate
-- Review a gated vehicle report
-- Checkout with simulated payment flows
-- Manage account and subscription state
-- Browse legal, pricing and FAQ content
-- Login to the admin interface with a demo code
+- Vehicle registration plate search
+- Simulated vehicle report gated behind a paywall
+- Checkout flow with simulated payment approval and decline states
+- Customer account page and cancellation flow
+- Pricing, FAQ, legal and content pages
+- Admin console with demo data and time controls
 
-## Project structure
+## Run it
 
-- `index.html` — compiled app bundle
-- `src/01-shell-and-styles.html` — global HTML shell and CSS tokens
-- `src/02-core.js` — shared app state, simulated provider, i18n and billing logic
-- `src/03-home-search-paywall.js` — home page, search flow and vault/paywall screens
-- `src/04-checkout-report-account.js` — checkout, report, login and account flows
-- `src/05-content-and-legal.js` — pricing, FAQ and legal pages
-- `src/06-admin-and-boot.js` — admin screens and bootstrapping
+Option 1: open `index.html` directly in a browser.
 
-## Run locally
-
-Open `index.html` directly in a browser, or serve the folder with:
+Option 2: serve the project locally:
 
 ```bash
 python3 -m http.server 8000
 ```
 
-Then open `http://localhost:8000`.
+Then browse to http://localhost:8000.
 
-## Build and verify
+## Build and validation
 
 ```bash
 ./scripts/build.sh
 ./scripts/check.sh
 ```
 
-## Demo controls
+The build script reconstructs `index.html` from the split source files in `src/`.
 
-- Card `4242 4242 4242 4242` approves
-- Card `4000 0000 0000 0002` declines
-- Vipps: any 8-digit number starting with `4` or `9`; `40000000` declines
-- Admin code: `1234`
+## Demo notes
 
-## Notes
+- Payment card `4242 4242 4242 4242` succeeds
+- Payment card `4000 0000 0000 0002` fails
+- Vipps numbers beginning with `4` or `9` are accepted; `40000000` fails
+- Admin login code is `1234`
 
-This is a front-end prototype only. There are no real network calls or backend dependencies.
+## Project status
+
+This is a prototype designed for evaluation and iteration. It is not connected to production services or real personal data.
+
+## License
+
+This project is licensed under the MIT License. See [LICENSE](LICENSE) for details.
