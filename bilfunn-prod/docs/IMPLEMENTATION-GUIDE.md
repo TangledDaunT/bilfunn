@@ -419,3 +419,19 @@ Publish only approved fields with explicit retention, policy and provider quotas
 | [bilfunn-prod/src/lib/vehicle/public-store.ts](../src/lib/vehicle/public-store.ts) | Contracts: `publicationEnabled`, `policy`, `refreshVehicle`, `publicSources`, `publicRecord`. |
 | [bilfunn-prod/src/lib/vehicle/quota.ts](../src/lib/vehicle/quota.ts) | Contracts: `takeProviderQuota`, `providerFailure`, `providerLease`. |
 | [bilfunn-prod/tests/integration/public-data.test.ts](../tests/integration/public-data.test.ts) | Executable regression scenarios for this section; use the isolated environment described above. |
+
+## 29. Isolate opt-in local vehicle previews and demo login tools
+
+Allow controlled local diagnostics without weakening production authentication or publication.
+
+**Contracts and failure behavior.** Local preview requires explicit loopback-only development gates, bounded calls and no persistence. Demo login links are single-use; do not publish tokens or reset a demo account casually.
+
+**Verification.** Local-preview unit tests cover production/host gates; the paid report remains a distinct flow.
+
+| File | Responsibility and entry points |
+| --- | --- |
+| [bilfunn-prod/scripts/create-demo-account.mjs](../scripts/create-demo-account.mjs) | Operational command; inspect its environment and safety gates before execution. |
+| [bilfunn-prod/scripts/dev-live.mjs](../scripts/dev-live.mjs) | Operational command; inspect its environment and safety gates before execution. |
+| [bilfunn-prod/scripts/vehicle-api-preview.mjs](../scripts/vehicle-api-preview.mjs) | Operational command; inspect its environment and safety gates before execution. |
+| [bilfunn-prod/src/lib/vehicle/local-preview.ts](../src/lib/vehicle/local-preview.ts) | Contracts: `localPreviewEnabled`, `localVehiclePreview`. |
+| [bilfunn-prod/tests/unit/local-vehicle-preview.test.ts](../tests/unit/local-vehicle-preview.test.ts) | Executable regression scenarios for this section; use the isolated environment described above. |
