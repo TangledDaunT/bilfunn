@@ -1,34 +1,42 @@
 import { prisma } from "./db";
-
-/**
- * Fixed-window limiter backed by Postgres. Good enough at MVP volume and one less
- * service to run. If search traffic grows past a few requests/second, move this to
- * Upstash Redis — the call signature stays the same.
- */
-export async function rateLimit(key: string, limit: number, windowMs: number) {
-  const now = new Date();
-  const existing = await prisma.rateLimit.findUnique({ where: { key } });
-
-  if (!existing || existing.windowEnd < now) {
-    await prisma.rateLimit.upsert({
-      where: { key },
-      create: { key, count: 1, windowEnd: new Date(now.getTime() + windowMs) },
-      update: { count: 1, windowEnd: new Date(now.getTime() + windowMs) },
-    });
-    return { ok: true, remaining: limit - 1, resetAt: new Date(now.getTime() + windowMs) };
-  }
-
-  if (existing.count >= limit) {
-    return { ok: false, remaining: 0, resetAt: existing.windowEnd };
-  }
-
-  const updated = await prisma.rateLimit.update({
-    where: { key },
-    data: { count: { increment: 1 } },
-  });
-  return { ok: true, remaining: Math.max(0, limit - updated.count), resetAt: existing.windowEnd };
+import { distributedLimit, redis } from "./redis";
+import { HttpError } from "./http";
+/** Raise a retryable 429 using the remaining shared window, rather than a generic fixed delay. */
+export async function enforceRateLimit(
+  key: string,
+  limit: number,
+  windowMs: number,
+) {
+  const result = await rateLimit(key, limit, windowMs);
+  if (!result.ok)
+    throw new HttpError(
+      429,
+      "too_many_attempts",
+      Math.max(1, Math.ceil((result.resetAt.getTime() - Date.now()) / 1000)),
+    );
+  return result;
 }
-
+/** Count attempts atomically; Redis is mandatory in production and PostgreSQL is only the local fallback. */
+export async function rateLimit(key: string, limit: number, windowMs: number) {
+  if (redis) return distributedLimit(key, limit, windowMs);
+  if (process.env.NODE_ENV === "production")
+    throw new Error("Shared rate limiter unavailable");
+  const [row] = await prisma.$queryRaw<
+    Array<{ count: number; windowEnd: Date }>
+  >`
+    INSERT INTO "RateLimit" ("key", "count", "windowEnd", "updatedAt") VALUES (${key}, 1, NOW() + ${windowMs} * INTERVAL '1 millisecond', NOW())
+    ON CONFLICT ("key") DO UPDATE SET
+      "count" = CASE WHEN "RateLimit"."windowEnd" <= NOW() THEN 1 ELSE "RateLimit"."count" + 1 END,
+      "windowEnd" = CASE WHEN "RateLimit"."windowEnd" <= NOW() THEN NOW() + ${windowMs} * INTERVAL '1 millisecond' ELSE "RateLimit"."windowEnd" END, "updatedAt" = NOW()
+    RETURNING "count", "windowEnd"`;
+  return {
+    ok: row.count <= limit,
+    remaining: Math.max(0, limit - row.count),
+    resetAt: row.windowEnd,
+  };
+}
 export async function pruneRateLimits() {
-  await prisma.rateLimit.deleteMany({ where: { windowEnd: { lt: new Date(Date.now() - 3600_000) } } });
+  await prisma.rateLimit.deleteMany({
+    where: { windowEnd: { lt: new Date() } },
+  });
 }

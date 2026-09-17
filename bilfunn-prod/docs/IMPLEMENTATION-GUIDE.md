@@ -164,3 +164,16 @@ Give clients finite waits and preserve useful status/retry information without e
 | [bilfunn-prod/src/lib/http.ts](../src/lib/http.ts) | Contracts: `HttpError`, `readBody`, `jsonBody`, `endpoint`. |
 | [bilfunn-prod/src/lib/money.ts](../src/lib/money.ts) | Contracts: `ore`, `formatOre`, `vatOf`, `formatDate`. |
 | [bilfunn-prod/tests/unit/request-recovery.test.ts](../tests/unit/request-recovery.test.ts) | Executable regression scenarios for this section; use the isolated environment described above. |
+
+## 11. Enforce shared rate limits with actionable retry windows
+
+Make request throttling block requests and communicate the actual wait.
+
+**Contracts and failure behavior.** Production uses Redis and fails closed without it; PostgreSQL is a development fallback. Hot keys serialize writes and require load validation. Enforced limits raise 429 with Retry-After.
+
+**Verification.** Local HTTP verification: five contact successes followed by 429 with a 3600-second wait.
+
+| File | Responsibility and entry points |
+| --- | --- |
+| [bilfunn-prod/src/lib/rateLimit.ts](../src/lib/rateLimit.ts) | Contracts: `enforceRateLimit`, `rateLimit`, `pruneRateLimits`. |
+| [bilfunn-prod/src/lib/redis.ts](../src/lib/redis.ts) | Contracts: `redis`, `distributedLimit`. |
