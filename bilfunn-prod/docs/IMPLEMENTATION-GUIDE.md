@@ -517,3 +517,20 @@ Keep unpublished or malformed editorial content out of public pages.
 | [bilfunn-prod/src/app/blogg/route.ts](../src/app/blogg/route.ts) | HTTP GET handler for `/blogg`; authorization, validation and failure policy are described above. |
 | [bilfunn-prod/src/lib/content.tsx](../src/lib/content.tsx) | Contracts: `FAQ_ITEMS`. |
 | [bilfunn-prod/src/lib/editorial.ts](../src/lib/editorial.ts) | Contracts: `topics`, `article`, `articles`. |
+
+## 35. Generate bounded sitemaps and exclude private crawl paths
+
+Expose stable sitemap shards with current publication eligibility and modification dates.
+
+**Contracts and failure behavior.** Use catalog ranges and keyset pagination. Disabled, expired, thin or suppressed data must not enter indexable sitemap output; kjoretoy remains the documented public directory.
+
+**Verification.** Production robots and sitemap responses were fetched and saved in readiness evidence.
+
+| File | Responsibility and entry points |
+| --- | --- |
+| [bilfunn-prod/src/app/robots.ts](../src/app/robots.ts) | Contracts: `dynamic`. |
+| [bilfunn-prod/src/app/sitemap-pages.xml/route.ts](../src/app/sitemap-pages.xml/route.ts) | HTTP GET handler for `/sitemap-pages.xml`; authorization, validation and failure policy are described above. |
+| `bilfunn-prod/src/app/sitemap.ts` (removed) | Retired file; its replacement and behavior are described in this section. |
+| [bilfunn-prod/src/app/sitemap.xml/route.ts](../src/app/sitemap.xml/route.ts) | HTTP GET handler for `/sitemap.xml`; authorization, validation and failure policy are described above. |
+| [bilfunn-prod/src/app/sitemaps/[file]/route.ts](../src/app/sitemaps/[file]/route.ts) | HTTP GET handler for `/sitemaps/[file]`; authorization, validation and failure policy are described above. |
+| [bilfunn-prod/src/lib/sitemaps.ts](../src/lib/sitemaps.ts) | Contracts: `xml`, `loc`, `sitemapIndex`, `editorialSitemap`, `vehicleSitemap`. |
