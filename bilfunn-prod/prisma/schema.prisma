@@ -1,6 +1,6 @@
 // Bilfunn — data model
 // Design notes:
-//  * Vehicle/owner payloads are NEVER persisted. Only the plate, the outcome and
+//  * Only explicitly permitted PUBLIC technical fields may be persisted. Owner data and
 //    timings are stored, so a search log can be produced without hoarding
 //    personal data about third parties.
 //  * Money is stored in øre (integer) to avoid float rounding.
@@ -57,6 +57,11 @@ model User {
   updatedAt     DateTime       @updatedAt
   deletedAt     DateTime?
   lastLoginAt   DateTime?
+  emailVerifiedAt DateTime?
+  identities    ExternalIdentity[]
+  sessions      Session[]
+  mfaSecret     String?
+  mfaLastStep   BigInt?
   locale        String         @default("nb")
   subscriptions Subscription[]
   payments      Payment[]
@@ -95,6 +100,9 @@ model Subscription {
   graceUntil     DateTime?
   reminderSentAt DateTime?
 
+  checkoutId String? @unique
+  cancelPending Boolean @default(false)
+  chargeScheduledFor DateTime?
   searchesThisPeriod Int @default(0)
   renewals           Int @default(0)
 
@@ -121,7 +129,7 @@ model Payment {
   vatOre    Int
   currency  String        @default("NOK")
 
-  receiptNumber     String  @unique
+  receiptNumber     String  @unique @default(dbgenerated("('SK-'::text || nextval('receipt_number_seq'::regclass)::text)"))
   providerPaymentId String?
   failureCode       String?
   refundedOre       Int     @default(0)
@@ -130,6 +138,7 @@ model Payment {
   updatedAt DateTime @updatedAt
 
   @@index([userId])
+  @@unique([provider, providerPaymentId])
   @@index([status, createdAt])
 }
 
@@ -247,4 +256,109 @@ model IdempotencyKey {
   createdAt DateTime @default(now())
 
   @@index([createdAt])
+}
+
+
+model Session {
+  id String @id
+  userId String
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  expiresAt DateTime
+  mfaAt DateTime?
+  @@index([userId])
+  @@index([expiresAt])
+}
+
+model Checkout {
+  id String @id @default(cuid())
+  userId String
+  provider Provider
+  plate String
+  introOre Int
+  renewalOre Int
+  introDays Int
+  vatBps Int
+  status String @default("PENDING")
+  reference String? @unique
+  customerId String?
+  subscriptionId String?
+  redirectUrl String?
+  consentAt DateTime @default(now())
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  @@index([userId, status])
+  @@index([provider, status, createdAt])
+}
+
+model WebhookEvent {
+  id String @id
+  provider Provider
+  processedAt DateTime @default(now())
+}
+
+model Outbox {
+  userId      String?
+  id String @id @default(cuid())
+  key String @unique
+  kind String
+  payload Json
+  status String @default("PENDING")
+  attempts Int @default(0)
+  availableAt DateTime @default(now())
+  leaseUntil DateTime?
+  createdAt DateTime @default(now())
+  completedAt DateTime?
+  lastError String?
+  @@index([status, availableAt])
+  @@index([userId, kind])
+}
+
+model PublicVehicle {
+  catalogId Int @unique @default(autoincrement())
+  plate String @id
+  data Json
+  source String
+  fetchedAt DateTime
+  changedAt DateTime
+  expiresAt DateTime
+  refreshAfter DateTime
+  eligible Boolean @default(false)
+  policyVersion Int @default(1)
+  suppressed Boolean @default(false)
+  gone Boolean @default(false)
+  refreshStatus String @default("OK")
+  @@index([eligible, suppressed, plate])
+  @@index([refreshAfter, plate])
+  @@index([expiresAt])
+}
+
+model SeoPolicy {
+  id String @id @default("default")
+  version Int @default(1)
+  additionalFields Int @default(2)
+  requireMakeModel Boolean @default(true)
+  requireRegistrationDate Boolean @default(true)
+  updatedAt DateTime @updatedAt
+}
+
+model ExternalIdentity {
+  id String @id @default(cuid())
+  provider String
+  subject String
+  userId String
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  @@unique([provider, subject])
+  @@unique([userId, provider])
+}
+
+model OAuthAttempt {
+  id String @id
+  nonce String
+  verifier String
+  next String
+  userId String?
+  expiresAt DateTime
+  @@index([expiresAt])
 }

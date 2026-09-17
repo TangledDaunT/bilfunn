@@ -57,3 +57,15 @@ Make installation, generation and static analysis repeatable with the resolved d
 | [bilfunn-prod/package-lock.json](../package-lock.json) | Configuration or support file for the behavior and checks described above. |
 | [bilfunn-prod/package.json](../package.json) | Configuration or support file for the behavior and checks described above. |
 | [bilfunn-prod/tsconfig.json](../tsconfig.json) | Configuration or support file for the behavior and checks described above. |
+
+## 03. Model durable sessions billing and public vehicle records
+
+Persist identity, payment, quota and publication state with explicit database constraints.
+
+**Contracts and failure behavior.** Prices are integer ore; event/payment uniqueness and relations enforce integrity. Public records exclude raw provider payloads and owner identities.
+
+**Verification.** Validate schema generation and inspect migration diffs before applying schema changes.
+
+| File | Responsibility and entry points |
+| --- | --- |
+| [bilfunn-prod/prisma/schema.prisma](../prisma/schema.prisma) | Configuration or support file for the behavior and checks described above. |
