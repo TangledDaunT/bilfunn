@@ -278,3 +278,17 @@ Recover provider truth without inventing new charges or trusting stale callbacks
 | [bilfunn-prod/src/lib/payments/reconcile.ts](../src/lib/payments/reconcile.ts) | Contracts: `reconcileStripeInvoice`, `reconciliationPage`, `reconcileCheckout`, `reconcileVippsPayment`. |
 | [bilfunn-prod/src/lib/payments/vipps-state.ts](../src/lib/payments/vipps-state.ts) | Contracts: `VippsCharge`, `reconcileVippsCharge`. |
 | [bilfunn-prod/tests/integration/vipps-state.test.ts](../tests/integration/vipps-state.test.ts) | Executable regression scenarios for this section; use the isolated environment described above. |
+
+## 19. Enforce atomic search allowances and durable cancellation
+
+Keep concurrent searches within subscription limits and retry provider cancellation safely.
+
+**Contracts and failure behavior.** Read Config on the server; lock subscription state before consuming quota. Cancellation is queued and may remain pending at the provider. New agreements cannot be resumed through local state alone.
+
+**Verification.** Transaction tests cover concurrency, cancellation, expired access and quotas.
+
+| File | Responsibility and entry points |
+| --- | --- |
+| [bilfunn-prod/src/app/api/subscription/cancel/route.ts](../src/app/api/subscription/cancel/route.ts) | HTTP POST, DELETE handler for `/api/subscription/cancel`; authorization, validation and failure policy are described above. |
+| [bilfunn-prod/src/lib/billing.ts](../src/lib/billing.ts) | Contracts: `hasAccess`, `cancelSubscription`, `reconcileCancellation`, `searchAllowance`, `consumeSearch`, `runBillingCycle`, `scheduleCharge`. |
+| [bilfunn-prod/tests/integration/transactions.test.ts](../tests/integration/transactions.test.ts) | Executable regression scenarios for this section; use the isolated environment described above. |
