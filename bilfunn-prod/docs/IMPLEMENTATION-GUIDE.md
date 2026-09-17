@@ -360,3 +360,17 @@ Drive billing/reconciliation through durable work and protected operational endp
 | [bilfunn-prod/src/app/api/ops/route.ts](../src/app/api/ops/route.ts) | HTTP GET handler for `/api/ops`; authorization, validation and failure policy are described above. |
 | [bilfunn-prod/src/lib/operations.ts](../src/lib/operations.ts) | Contracts: `operationalMetrics`. |
 | [bilfunn-prod/vercel.json](../vercel.json) | Configuration or support file for the behavior and checks described above. |
+
+## 25. Probe dependencies and regress timeout and limiter recovery
+
+Distinguish basic database health from full dependency readiness.
+
+**Contracts and failure behavior.** Health returns 200/503 without connection details. Ready also checks security configuration and Redis; ingress controls are still needed for public probes.
+
+**Verification.** Readiness tests assert real limiter waits and query recovery; stopping isolated PostgreSQL changed health from 200 to 503.
+
+| File | Responsibility and entry points |
+| --- | --- |
+| [bilfunn-prod/src/app/api/health/route.ts](../src/app/api/health/route.ts) | HTTP GET handler for `/api/health`; authorization, validation and failure policy are described above. |
+| [bilfunn-prod/src/app/api/ready/route.ts](../src/app/api/ready/route.ts) | HTTP GET handler for `/api/ready`; authorization, validation and failure policy are described above. |
+| [bilfunn-prod/tests/integration/readiness.test.ts](../tests/integration/readiness.test.ts) | Executable regression scenarios for this section; use the isolated environment described above. |
