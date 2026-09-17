@@ -250,3 +250,16 @@ Support recurring-payment API calls with explicit deadlines and authenticated ca
 | --- | --- |
 | [bilfunn-prod/src/lib/payments/vipps-signature.ts](../src/lib/payments/vipps-signature.ts) | Contracts: `verifyVipps`. |
 | [bilfunn-prod/src/lib/payments/vipps.ts](../src/lib/payments/vipps.ts) | Contracts: `accessToken`, `vippsProvider`, `getVippsResource`, `getVippsChargePage`. |
+
+## 17. Apply payment events once and verify Stripe webhook state
+
+Persist deduplication before transactional payment side effects.
+
+**Contracts and failure behavior.** Event IDs and payment IDs are independently unique. Amounts must match accepted terms; transactional receipt enqueueing must not duplicate email jobs on replay.
+
+**Verification.** Payment/transaction integration tests cover duplicate events, mismatches and rollback.
+
+| File | Responsibility and entry points |
+| --- | --- |
+| [bilfunn-prod/src/app/api/webhooks/stripe/route.ts](../src/app/api/webhooks/stripe/route.ts) | HTTP POST handler for `/api/webhooks/stripe`; authorization, validation and failure policy are described above. |
+| [bilfunn-prod/src/lib/payments/events.ts](../src/lib/payments/events.ts) | Contracts: `once`, `applyPaid`. |
