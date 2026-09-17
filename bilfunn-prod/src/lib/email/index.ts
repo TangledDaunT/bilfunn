@@ -1,36 +1,80 @@
-import { Resend } from "resend";
 import { prisma } from "../db";
-import { env } from "../env";
+import { env, emailConfigured } from "../env";
+import { enqueue } from "../jobs";
 import { renderEmail, type EmailType } from "./templates";
-
-const resend = env.email.resendKey ? new Resend(env.email.resendKey) : null;
-
-/**
- * Every transactional email is written to EmailLog first, then sent. Without
- * RESEND_API_KEY the log is the delivery: the admin console shows exactly what
- * would have been sent, so the flow is testable before DNS is verified.
- */
+import { randomUUID } from "crypto";
+import { HttpError } from "../http";
 export async function sendEmail(
   type: EmailType,
   to: string,
   ctx: Record<string, unknown> = {},
-  userId?: string | null
+  userId?: string | null,
+  key?: string,
 ) {
-  const { subject, html, text } = renderEmail(type, ctx);
-  const log = await prisma.emailLog.create({
-    data: { to, type, subject, body: html, userId: userId ?? null, provider: resend ? "resend" : "console" },
+  if (!emailConfigured()) throw new HttpError(503, "email_unavailable");
+  const job = await enqueue(
+    "email",
+    {
+      type,
+      to,
+      ctx,
+      userId,
+      expiresAt: type === "login_code" ? Date.now() + 600_000 : null,
+    },
+    key || randomUUID(),
+  );
+  await (await import("../wake-worker")).wakeWorker();
+  return job;
+}
+export async function deliverEmail(
+  data: {
+    type: EmailType;
+    to: string;
+    ctx: Record<string, unknown>;
+    userId?: string;
+    expiresAt?: number;
+  },
+  key: string,
+) {
+  if (data.expiresAt && data.expiresAt <= Date.now()) return;
+  if (
+    data.userId &&
+    !(await prisma.user.findFirst({
+      where: { id: data.userId, deletedAt: null },
+    }))
+  )
+    return;
+  if (!emailConfigured()) throw new Error("Email disabled");
+  const { subject, html, text } = renderEmail(data.type, data.ctx);
+  const result = await fetch("https://api.resend.com/emails", {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${env.email.resendKey}`,
+      "Content-Type": "application/json",
+      "Idempotency-Key": key,
+    },
+    body: JSON.stringify({
+      from: env.email.from,
+      to: [data.to],
+      subject,
+      html,
+      text,
+    }),
+    signal: AbortSignal.timeout(8000),
+    redirect: "error",
+    cache: "no-store",
   });
-
-  if (!resend) {
-    if (process.env.NODE_ENV !== "production") console.info(`[email:${type}] → ${to}: ${subject}`);
-    return log;
-  }
-
-  try {
-    await resend.emails.send({ from: env.email.from, to, subject, html, text });
-    await prisma.emailLog.update({ where: { id: log.id }, data: { sentAt: new Date() } });
-  } catch (err: any) {
-    await prisma.emailLog.update({ where: { id: log.id }, data: { error: String(err?.message ?? err) } });
-  }
-  return log;
+  if (!result.ok) throw new Error("Email provider rejected delivery");
+  // Authentication secrets and rendered message bodies never enter the audit log.
+  await prisma.emailLog.create({
+    data: {
+      to: data.type === "login_code" ? "[redacted]" : data.to,
+      type: data.type,
+      subject,
+      body: "[not retained]",
+      userId: data.userId ?? null,
+      provider: "resend",
+      sentAt: new Date(),
+    },
+  });
 }

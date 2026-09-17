@@ -317,3 +317,16 @@ Provide bounded user-owned exports and erase personal operational data safely.
 | --- | --- |
 | [bilfunn-prod/src/app/api/account/delete/route.ts](../src/app/api/account/delete/route.ts) | HTTP POST handler for `/api/account/delete`; authorization, validation and failure policy are described above. |
 | [bilfunn-prod/src/app/api/account/export/route.ts](../src/app/api/account/export/route.ts) | HTTP GET handler for `/api/account/export`; authorization, validation and failure policy are described above. |
+
+## 22. Queue transactional email with bounded delivery and deduplication
+
+Separate user-facing requests from durable email delivery.
+
+**Contracts and failure behavior.** Login messages expire; delivery requires configured transport and production queue support. Message payloads and recipient addresses are sensitive and must not be logged.
+
+**Verification.** Job and payment tests verify unique receipt jobs; real delivery is not proven by local login tests.
+
+| File | Responsibility and entry points |
+| --- | --- |
+| [bilfunn-prod/src/lib/email/index.ts](../src/lib/email/index.ts) | Contracts: `sendEmail`, `deliverEmail`. |
+| [bilfunn-prod/src/lib/email/templates.ts](../src/lib/email/templates.ts) | Contracts: `EmailType`, `renderEmail`. |
