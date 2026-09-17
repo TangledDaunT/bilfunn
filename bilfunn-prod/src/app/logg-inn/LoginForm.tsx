@@ -5,13 +5,17 @@ import { useState } from "react";
 export default function LoginForm({
   token,
   next = "/konto",
+  passwordLogin = false,
 }: {
   token?: string;
   next?: string;
+  passwordLogin?: boolean;
 }) {
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [code, setCode] = useState("");
+  const [password, setPassword] = useState("");
+  const [usePassword, setUsePassword] = useState(false);
   const [sent, setSent] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
@@ -21,13 +25,20 @@ export default function LoginForm({
     setError("");
     try {
       const verify = sent || Boolean(token);
+      const passwordAttempt = usePassword && !token;
       const res = await clientRequest(
-        `/api/auth/${verify ? "verify" : "request"}`,
+        `/api/auth/${passwordAttempt ? "password" : verify ? "verify" : "request"}`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(
-            token ? { token } : verify ? { email, code } : { email },
+            token
+              ? { token }
+              : passwordAttempt
+                ? { email, password }
+                : verify
+                  ? { email, code }
+                  : { email },
           ),
         },
       );
@@ -37,13 +48,15 @@ export default function LoginForm({
             ? retryMessage(res)
             : res.status >= 500
               ? "Innlogging er midlertidig utilgjengelig. Prøv igjen om litt."
-              : verify && res.status === 401
-                ? "Koden eller lenken er utløpt, brukt eller ugyldig. Be om en ny kode."
+              : passwordAttempt && res.status === 401
+                ? "E-postadressen eller passordet er feil."
+                : verify && res.status === 401
+                  ? "Koden eller lenken er utløpt, brukt eller ugyldig. Be om en ny kode."
                 : "Kunne ikke fullføre. Kontroller opplysningene eller be om ny kode.",
         );
         return;
       }
-      if (verify) {
+      if (verify || passwordAttempt) {
         router.replace(next);
         router.refresh();
       } else setSent(true);
@@ -71,6 +84,24 @@ export default function LoginForm({
             disabled={sent}
             onChange={(e) => setEmail(e.target.value)}
           />
+          {usePassword && (
+            <>
+              <label className="f" htmlFor="password">
+                Passord
+              </label>
+              <input
+                className="input"
+                id="password"
+                type="password"
+                autoComplete="current-password"
+                required
+                minLength={16}
+                maxLength={256}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+              />
+            </>
+          )}
           {sent && (
             <>
               <p>Vi har sendt en engangskode dersom adressen kan brukes.</p>
@@ -95,10 +126,23 @@ export default function LoginForm({
       <button className="btn block" disabled={busy}>
         {busy
           ? "Vennligst vent…"
-          : sent || token
+            : sent || token || usePassword
             ? "Bekreft innlogging"
             : "Send kode"}
       </button>
+      {!token && !sent && passwordLogin && (
+        <button
+          type="button"
+          className="linkbtn"
+          onClick={() => {
+            setUsePassword((value) => !value);
+            setPassword("");
+            setError("");
+          }}
+        >
+          {usePassword ? "Bruk engangskode" : "Logg inn med passord"}
+        </button>
+      )}
       {token && (
         <a
           className="linkbtn"

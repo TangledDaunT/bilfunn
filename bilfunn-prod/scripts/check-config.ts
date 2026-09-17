@@ -7,6 +7,8 @@ async function main() {
   for (const key of ["DATABASE_URL", "DIRECT_URL"])
     if (!process.env[key]) errors.push(key);
   const provider = env.svv.provider;
+  if (!env.demoLogin.email || !env.demoLogin.passwordHash)
+    errors.push("DEMO_LOGIN_EMAIL", "DEMO_LOGIN_PASSWORD_HASH");
   if (provider === "svv-technical" && !env.svv.key) errors.push("SVV_API_KEY");
   if (provider === "svv-owner")
     for (const key of [

@@ -2,6 +2,7 @@ import { googleConfigured, safeLoginNext } from "@/lib/google-auth";
 import { getCurrentUser } from "@/lib/session";
 import LoginForm from "./LoginForm";
 import { pageMetadata } from "@/lib/seo";
+import { demoLoginConfigured } from "@/lib/env";
 export const metadata = pageMetadata(
   "Logg inn",
   "Logg inn på Skiltnummeret.no for å administrere tilgang og abonnement.",
@@ -66,7 +67,11 @@ export default async function LoginPage({
             <p className="login-divider">eller med e-post</p>
           </div>
         )}
-        <LoginForm token={searchParams.token} next={next} />
+        <LoginForm
+          token={searchParams.token}
+          next={next}
+          passwordLogin={demoLoginConfigured()}
+        />
       </div>
     </div>
   );

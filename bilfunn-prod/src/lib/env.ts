@@ -20,6 +20,10 @@ export const env = {
     .split(",")
     .map((e) => e.trim().toLowerCase())
     .filter(Boolean),
+  demoLogin: {
+    email: s("DEMO_LOGIN_EMAIL").toLowerCase(),
+    passwordHash: s("DEMO_LOGIN_PASSWORD_HASH"),
+  },
   redis: {
     url: s("UPSTASH_REDIS_REST_URL"),
     token: s("UPSTASH_REDIS_REST_TOKEN"),
@@ -104,6 +108,15 @@ export function securityConfigurationErrors() {
     errors.push("DATA_ENCRYPTION_KEY");
   if (env.cronSecret.length < 32) errors.push("CRON_SECRET");
   if (
+    Boolean(env.demoLogin.email) !== Boolean(env.demoLogin.passwordHash) ||
+    (env.demoLogin.email &&
+      (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(env.demoLogin.email) ||
+        !/^scrypt\$[A-Za-z0-9_-]{22,}\$[a-f0-9]{128}$/i.test(
+          env.demoLogin.passwordHash,
+        )))
+  )
+    errors.push("DEMO_LOGIN_EMAIL", "DEMO_LOGIN_PASSWORD_HASH");
+  if (
     !env.baseUrl.startsWith("https://") &&
     process.env.NODE_ENV === "production"
   )
@@ -174,3 +187,6 @@ export const emailConfigured = () =>
     env.email.from &&
     (process.env.NODE_ENV !== "production" || queueConfigured()),
   );
+
+export const demoLoginConfigured = () =>
+  Boolean(env.demoLogin.email && env.demoLogin.passwordHash);
