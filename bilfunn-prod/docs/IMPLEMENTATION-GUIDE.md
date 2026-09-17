@@ -534,3 +534,19 @@ Expose stable sitemap shards with current publication eligibility and modificati
 | [bilfunn-prod/src/app/sitemap.xml/route.ts](../src/app/sitemap.xml/route.ts) | HTTP GET handler for `/sitemap.xml`; authorization, validation and failure policy are described above. |
 | [bilfunn-prod/src/app/sitemaps/[file]/route.ts](../src/app/sitemaps/[file]/route.ts) | HTTP GET handler for `/sitemaps/[file]`; authorization, validation and failure policy are described above. |
 | [bilfunn-prod/src/lib/sitemaps.ts](../src/lib/sitemaps.ts) | Contracts: `xml`, `loc`, `sitemapIndex`, `editorialSitemap`, `vehicleSitemap`. |
+
+## 36. Expose MFA-protected administration and configurable commercial rules
+
+Provide bounded administrative lists and validated configuration updates.
+
+**Contracts and failure behavior.** UI visibility does not replace API authorization. Prices/limits are validated integer values; configuration changes need cache invalidation and truthful user disclosures.
+
+**Verification.** Lint/build pass; authorization is checked server-side and the API has a per-admin limit.
+
+| File | Responsibility and entry points |
+| --- | --- |
+| [bilfunn-prod/src/app/admin/ConfigForm.tsx](../src/app/admin/ConfigForm.tsx) | React UI component; client interaction/state boundary. |
+| [bilfunn-prod/src/app/admin/error.tsx](../src/app/admin/error.tsx) | Client error boundary; renders recovery controls without exposing internal exception details. |
+| [bilfunn-prod/src/app/admin/loading.tsx](../src/app/admin/loading.tsx) | Server loading placeholder; keep its shape aligned with the final page and its status accessible. |
+| [bilfunn-prod/src/app/admin/page.tsx](../src/app/admin/page.tsx) | Page entry point; server rendering and server-owned data access. |
+| [bilfunn-prod/src/app/api/admin/config/route.ts](../src/app/api/admin/config/route.ts) | HTTP POST handler for `/api/admin/config`; authorization, validation and failure policy are described above. |

@@ -1,3 +1,6 @@
+import { enforceRateLimit } from "@/lib/rateLimit";
+export const dynamic = "force-dynamic";
+import { endpoint, jsonBody } from "@/lib/http";
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/db";
@@ -19,17 +22,25 @@ const Schema = z.object({
   cancelKeepsAccess: z.boolean(),
 });
 
-export async function POST(req: Request) {
+export const POST = endpoint(async (req: Request) => {
   const admin = await requireAdmin();
   if (!admin) return NextResponse.json({ error: "forbidden" }, { status: 403 });
+  await enforceRateLimit(`admin-config:${admin.id}`, 30, 60_000);
 
-  const parsed = Schema.safeParse(await req.json().catch(() => ({})));
-  if (!parsed.success) return NextResponse.json({ error: "invalid" }, { status: 400 });
+  const data = await jsonBody(req, Schema);
 
-  const updated = await prisma.config.update({ where: { id: "default" }, data: parsed.data });
-  await prisma.adminAudit.create({
-    data: { actor: admin.email, action: "config.update", target: "default", detail: parsed.data as any },
+  const updated = await prisma.config.update({
+    where: { id: "default" },
+    data: data,
   });
-  invalidateConfig();
+  await prisma.adminAudit.create({
+    data: {
+      actor: admin.email,
+      action: "config.update",
+      target: "default",
+      detail: data as any,
+    },
+  });
+  await invalidateConfig();
   return NextResponse.json({ ok: true, config: updated });
-}
+});
