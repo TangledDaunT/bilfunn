@@ -69,3 +69,15 @@ Persist identity, payment, quota and publication state with explicit database co
 | File | Responsibility and entry points |
 | --- | --- |
 | [bilfunn-prod/prisma/schema.prisma](../prisma/schema.prisma) | Configuration or support file for the behavior and checks described above. |
+
+## 04. Introduce the initial production database migration
+
+Capture tables, indexes and receipt sequencing in a replayable migration.
+
+**Contracts and failure behavior.** Apply migrations to an isolated empty database before staging. Never substitute a destructive schema reset for migration deployment.
+
+**Verification.** Fresh local migration deployment passed in the readiness pass.
+
+| File | Responsibility and entry points |
+| --- | --- |
+| [bilfunn-prod/prisma/migrations/202609170001_initial/migration.sql](../prisma/migrations/202609170001_initial/migration.sql) | Versioned schema transition; apply through Prisma migration deployment and retain historical ordering. |
