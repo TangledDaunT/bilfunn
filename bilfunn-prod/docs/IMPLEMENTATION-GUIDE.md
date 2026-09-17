@@ -751,3 +751,27 @@ Remove avoidable image transfer and chained font discovery while preserving the 
 | [bilfunn-prod/public/fonts/subset-2.woff2](../public/fonts/subset-2.woff2) | Static design/font asset; preserve accessibility, dimensions and the original source exports when regenerating. |
 | [bilfunn-prod/public/fonts/subset-3.woff2](../public/fonts/subset-3.woff2) | Static design/font asset; preserve accessibility, dimensions and the original source exports when regenerating. |
 | [bilfunn-prod/public/public.css](../public/public.css) | Shared styles and responsive/accessibility behavior; verify both desktop and narrow layouts after changes. |
+
+## 46. Add unpublished editorial landing-page drafts
+
+Keep planned search content separate from approved production publication.
+
+**Contracts and failure behavior.** Frontmatter publication gates, author requirements and minimum content rules determine visibility. Do not publish placeholders or unsupported owner-service claims without review.
+
+**Verification.** Inspect editorial validation and generated sitemaps before setting published to true.
+
+| File | Responsibility and entry points |
+| --- | --- |
+| [bilfunn-prod/content/blogg/.gitkeep](../content/blogg/.gitkeep) | Configuration or support file for the behavior and checks described above. |
+| [bilfunn-prod/content/pages/bilinfo.md](../content/pages/bilinfo.md) | Maintainer guidance or gated editorial copy; retain its approval and verification limitations. |
+| [bilfunn-prod/content/pages/bilnummer.md](../content/pages/bilnummer.md) | Maintainer guidance or gated editorial copy; retain its approval and verification limitations. |
+| [bilfunn-prod/content/pages/bilregister.md](../content/pages/bilregister.md) | Maintainer guidance or gated editorial copy; retain its approval and verification limitations. |
+| [bilfunn-prod/content/pages/bilskilt.md](../content/pages/bilskilt.md) | Maintainer guidance or gated editorial copy; retain its approval and verification limitations. |
+| [bilfunn-prod/content/pages/eieropplysninger.md](../content/pages/eieropplysninger.md) | Maintainer guidance or gated editorial copy; retain its approval and verification limitations. |
+| [bilfunn-prod/content/pages/heftelser.md](../content/pages/heftelser.md) | Maintainer guidance or gated editorial copy; retain its approval and verification limitations. |
+| [bilfunn-prod/content/pages/hvem-eier-bilen.md](../content/pages/hvem-eier-bilen.md) | Maintainer guidance or gated editorial copy; retain its approval and verification limitations. |
+| [bilfunn-prod/content/pages/kjoretoyopplysninger.md](../content/pages/kjoretoyopplysninger.md) | Maintainer guidance or gated editorial copy; retain its approval and verification limitations. |
+| [bilfunn-prod/content/pages/registreringsnummer.md](../content/pages/registreringsnummer.md) | Maintainer guidance or gated editorial copy; retain its approval and verification limitations. |
+| [bilfunn-prod/content/pages/regnr.md](../content/pages/regnr.md) | Maintainer guidance or gated editorial copy; retain its approval and verification limitations. |
+| [bilfunn-prod/content/pages/regnummer.md](../content/pages/regnummer.md) | Maintainer guidance or gated editorial copy; retain its approval and verification limitations. |
+| [bilfunn-prod/content/pages/skiltnummer.md](../content/pages/skiltnummer.md) | Maintainer guidance or gated editorial copy; retain its approval and verification limitations. |
