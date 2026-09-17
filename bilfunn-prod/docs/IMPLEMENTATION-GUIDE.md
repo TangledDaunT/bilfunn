@@ -617,3 +617,25 @@ Provide Norwegian login feedback for invalid, expired, reused and throttled chal
 | [bilfunn-prod/src/app/logg-inn/error.tsx](../src/app/logg-inn/error.tsx) | Client error boundary; renders recovery controls without exposing internal exception details. |
 | [bilfunn-prod/src/app/logg-inn/loading.tsx](../src/app/logg-inn/loading.tsx) | Server loading placeholder; keep its shape aligned with the final page and its status accessible. |
 | [bilfunn-prod/src/app/logg-inn/page.tsx](../src/app/logg-inn/page.tsx) | Page entry point; server rendering and server-owned data access. |
+
+## 41. Align informational pages and contact forms with available services
+
+Present pricing, contact and service guidance with bounded submissions.
+
+**Contracts and failure behavior.** How-it-works pricing comes from Config and no longer promises owner data or account-free checkout. Contact is validated server-side and rate-limited. Static shared pricing disclosures still need reconciliation.
+
+**Verification.** Contact HTTP throttling and page/browser checks are documented in the readiness report.
+
+| File | Responsibility and entry points |
+| --- | --- |
+| [bilfunn-prod/src/app/api/contact/route.ts](../src/app/api/contact/route.ts) | HTTP POST handler for `/api/contact`; authorization, validation and failure policy are described above. |
+| [bilfunn-prod/src/app/faq/page.tsx](../src/app/faq/page.tsx) | Page entry point; server rendering and server-owned data access. |
+| [bilfunn-prod/src/app/hvordan/error.tsx](../src/app/hvordan/error.tsx) | Client error boundary; renders recovery controls without exposing internal exception details. |
+| [bilfunn-prod/src/app/hvordan/loading.tsx](../src/app/hvordan/loading.tsx) | Server loading placeholder; keep its shape aligned with the final page and its status accessible. |
+| [bilfunn-prod/src/app/hvordan/page.tsx](../src/app/hvordan/page.tsx) | Page entry point; server rendering and server-owned data access. |
+| [bilfunn-prod/src/app/kontakt/ContactForm.tsx](../src/app/kontakt/ContactForm.tsx) | React UI component; client interaction/state boundary. |
+| [bilfunn-prod/src/app/kontakt/page.tsx](../src/app/kontakt/page.tsx) | Page entry point; server rendering and server-owned data access. |
+| [bilfunn-prod/src/app/om-oss/page.tsx](../src/app/om-oss/page.tsx) | Page entry point; server rendering and server-owned data access. |
+| [bilfunn-prod/src/app/priser/error.tsx](../src/app/priser/error.tsx) | Client error boundary; renders recovery controls without exposing internal exception details. |
+| [bilfunn-prod/src/app/priser/loading.tsx](../src/app/priser/loading.tsx) | Server loading placeholder; keep its shape aligned with the final page and its status accessible. |
+| [bilfunn-prod/src/app/priser/page.tsx](../src/app/priser/page.tsx) | Page entry point; server rendering and server-owned data access. |

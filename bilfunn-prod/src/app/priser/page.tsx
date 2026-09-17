@@ -1,55 +1,102 @@
-import Link from "next/link";
+/* eslint-disable @next/next/no-img-element -- Original static SVG icons need no image transformation. */
 import { getConfig } from "@/lib/config";
 import { formatOre } from "@/lib/money";
 import { pageMetadata } from "@/lib/seo";
-
-export const metadata = pageMetadata("Priser", "Se Bilfunns priser, tilgang og abonnement for kjøretøyopplysninger.", "/priser");
-import { Check } from "@/components/icons";
+import DesignFaq from "@/components/DesignFaq";
+import DesignCta from "@/components/DesignCta";
+export const metadata = pageMetadata(
+  "Priser",
+  "Priser og abonnement for kjøretøyopplysninger.",
+  "/priser",
+);
 export const dynamic = "force-dynamic";
-
 export default async function PricingPage() {
   const cfg = await getConfig();
   return (
-    <div className="wrap" style={{ paddingTop: 28 }}>
-      <h1>Priser</h1>
-      <p className="muted" style={{ maxWidth: "62ch" }}>
-        Én pris, ingen skjulte tillegg. Du ser alltid hva du betaler og når neste trekk skjer.
-      </p>
-      <div className="grid g2" style={{ marginTop: 18 }}>
-        <div className="pricebox">
-          <div className="top">
-            <div className="amt">{formatOre(cfg.introPriceOre)}</div>
-            <div style={{ opacity: 0.92 }}>første {cfg.introDays} dager</div>
+    <div className="design-page">
+      <div className="design-container">
+        <div className="page-intro pricing-intro">
+          <p className="eyebrow">Priser og abonnement</p>
+          <h1>Vit hva du betaler. Hele veien.</h1>
+          <p>
+            {formatOre(cfg.introPriceOre)} for {cfg.introDays} dager. Deretter{" "}
+            {formatOre(cfg.renewalPriceOre)} per måned med automatisk fornyelse.
+            Avbestill når som helst.
+          </p>
+        </div>
+        <section className="pricing-section">
+          <p className="eyebrow">Du har full kontroll</p>
+          <h2>Enkel og tydelig prising.</h2>
+          <p className="muted">En liten start. Ingen overraskelser.</p>
+          <div className="pricing-grid">
+            <div>
+              <p className="eyebrow">De første {cfg.introDays} dagene</p>
+              <p className="pricing-number">{formatOre(cfg.introPriceOre)}</p>
+              <h3>{cfg.introDays} dagers tilgang</h3>
+              <p>
+                Utforsk tilgjengelige kjøretøyopplysninger og bli kjent med
+                tjenesten. Inntil {cfg.introSearchLimit} oppslag.
+              </p>
+            </div>
+            <div>
+              <p className="eyebrow">Fortsett, om du fortsetter</p>
+              <p className="pricing-number">
+                {formatOre(cfg.renewalPriceOre)}
+                <span>/måned</span>
+              </p>
+              <h3>Fornyes automatisk</h3>
+              <p>
+                Etter {cfg.introDays} dager fortsetter abonnementet til{" "}
+                {formatOre(cfg.renewalPriceOre)} per måned til du avbestiller.
+                Inntil {cfg.monthlySearchLimit} oppslag per måned.
+              </p>
+            </div>
+            <div>
+              <p className="eyebrow">Alltid på dine premisser</p>
+              <p className="pricing-number">
+                <img src="/design/894ef.svg" width="32" height="32" alt="" />
+              </p>
+              <h3>Avbestill når som helst</h3>
+              <p>
+                Avbestill enkelt fra Min side før neste fornyelse. Ingen
+                bindingstid.
+              </p>
+            </div>
           </div>
-          <div className="body">
-            <ul className="terms-list">
-              <li><Check /><span>Inntil {cfg.introSearchLimit} oppslag</span></li>
-              <li><Check /><span>Full rapport på hvert kjøretøy</span></li>
-              <li><Check /><span>Går automatisk over til månedsabonnement</span></li>
+        </section>
+      </div>
+      <section className="pricing-details wash">
+        <div className="design-container split">
+          <div>
+            <h2>Dette er inkludert.</h2>
+            <p>
+              Alle tilgjengelige kjøretøyopplysninger samlet i en oversiktlig
+              rapport.
+            </p>
+            <ul>
+              <li>Tekniske data og grunnleggende kjøretøyinfo</li>
+              <li>EU-kontroll og registrering</li>
+              <li>Min side med kvitteringer og søkehistorikk</li>
             </ul>
-            <Link className="btn block" href="/" style={{ marginTop: 14 }}>
-              Start søk
-            </Link>
+          </div>
+          <div>
+            <h2>Du bestemmer når du stopper.</h2>
+            <p>
+              Avbestill fra Min side før neste fornyelse. Se status og
+              gjenværende tilgang på kontoen din.
+            </p>
+            <p>
+              Alle priser inkluderer merverdiavgift. Pris og betalingsvilkår
+              vises før du bekrefter kjøpet.
+            </p>
           </div>
         </div>
-        <div className="card">
-          <h2 style={{ marginBottom: 4 }}>
-            {formatOre(cfg.renewalPriceOre)}
-            <span className="muted" style={{ fontSize: "1rem", fontWeight: 400 }}>/mnd</span>
-          </h2>
-          <p className="muted small">Fra dag {cfg.introDays + 1}, inntil du sier opp.</p>
-          <ul className="terms-list">
-            <li><Check /><span>{cfg.monthlySearchLimit} oppslag per måned</span></li>
-            <li><Check /><span>Søkehistorikk og kvitteringer</span></li>
-            <li><Check /><span>Oppsigelse på Min side, uten oppsigelsestid</span></li>
-            <li><Check /><span>E-postvarsel før hver fornyelse</span></li>
-          </ul>
-        </div>
-      </div>
-      <div className="note" style={{ marginTop: 16 }}>
-        Alle priser inkluderer 25 % merverdiavgift. Betaling med Vipps eller bankkort. Trekket vises som «BILFUNN» på
-        kontoutskriften.
-      </div>
+      </section>
+      <section className="design-section design-container">
+        <h2>Spørsmål om abonnementet?</h2>
+        <DesignFaq limit={8} />
+      </section>
+      <DesignCta />
     </div>
   );
 }

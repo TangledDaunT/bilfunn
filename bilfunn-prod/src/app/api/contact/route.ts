@@ -1,34 +1,33 @@
-import { NextResponse } from "next/server";
 import { z } from "zod";
 import { prisma } from "@/lib/db";
-import { rateLimit } from "@/lib/rateLimit";
+import { enforceRateLimit as rateLimit } from "@/lib/rateLimit";
 import { clientIp, hashIp } from "@/lib/crypto";
-
-export const runtime = "nodejs";
-
-export async function POST(req: Request) {
-  const limit = await rateLimit(`contact:${hashIp(clientIp(req.headers))}`, 5, 3600_000);
-  if (!limit.ok) return NextResponse.json({ error: "For mange meldinger. Prøv igjen senere." }, { status: 429 });
-
-  const parsed = z
-    .object({
-      name: z.string().min(1).max(120),
-      email: z.string().email().max(254),
-      category: z.string().max(80),
-      message: z.string().min(10).max(4000),
-      website: z.string().max(0).optional(), // honeypot
-    })
-    .safeParse(await req.json().catch(() => ({})));
-
-  if (!parsed.success) return NextResponse.json({ error: "Kontroller feltene og prøv igjen." }, { status: 400 });
-
+import { endpoint, jsonBody, HttpError } from "@/lib/http";
+export const POST = endpoint(async (req) => {
+  if (
+    !(await rateLimit(`contact:${hashIp(clientIp(req.headers))}`, 5, 3600_000))
+      .ok
+  )
+    throw new HttpError(429, "too_many_requests");
+  const body = await jsonBody(
+    req,
+    z
+      .object({
+        name: z.string().min(1).max(120),
+        email: z.string().email().max(254),
+        category: z.string().max(80),
+        message: z.string().min(10).max(4000),
+        website: z.string().max(0).optional(),
+      })
+      .strict(),
+  );
   await prisma.ticket.create({
     data: {
-      name: parsed.data.name,
-      email: parsed.data.email.toLowerCase(),
-      category: parsed.data.category,
-      message: parsed.data.message,
+      name: body.name,
+      email: body.email.toLowerCase(),
+      category: body.category,
+      message: body.message,
     },
   });
-  return NextResponse.json({ ok: true });
-}
+  return Response.json({ ok: true });
+});

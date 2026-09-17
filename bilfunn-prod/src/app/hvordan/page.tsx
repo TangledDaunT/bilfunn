@@ -1,16 +1,36 @@
+import { getConfig } from "@/lib/config";
+import { formatOre } from "@/lib/money";
 import PlateSearch from "@/components/PlateSearch";
 import { pageMetadata } from "@/lib/seo";
 
-export const metadata = pageMetadata("Slik virker det", "Slik søker du på et norsk registreringsnummer og får en kjøretøyr rapport.", "/hvordan");
+export const metadata = pageMetadata(
+  "Slik virker det",
+  "Slik søker du på et norsk registreringsnummer og får en kjøretøyrapport.",
+  "/hvordan",
+);
 
-const STEPS: Array<[string, string]> = [
-  ["Søk på registreringsnummeret", "Skriv inn skiltet på forsiden. Vi normaliserer mellomrom og små bokstaver automatisk."],
-  ["Bekreft kjøretøyet", "Du ser merke, modell, årsmodell og farge gratis, så du vet at du har funnet riktig bil."],
-  ["Betal 3 kr", "Vipps eller bankkort. Kontoen opprettes automatisk – ingen registrering på forhånd."],
-  ["Les rapporten", "Teknisk informasjon, EU-kontroll, registrering og tilgjengelige eieropplysninger vises umiddelbart."],
-];
+export const dynamic = "force-dynamic";
+export default async function HowPage() {
+  const cfg = await getConfig();
+  const STEPS: Array<[string, string]> = [
+    [
+      "Søk på registreringsnummeret",
+      "Skriv inn skiltet på forsiden. Vi normaliserer mellomrom og små bokstaver automatisk.",
+    ],
+    [
+      "Bekreft kjøretøyet",
+      "Du ser merke, modell, årsmodell og farge gratis, så du vet at du har funnet riktig bil.",
+    ],
+    [
+      `Bekreft innlogging og betal ${formatOre(cfg.introPriceOre)}`,
+      `Velg en tilgjengelig betalingsmåte. Introduksjonen varer i ${cfg.introDays} dager, deretter fornyes abonnementet til ${formatOre(cfg.renewalPriceOre)} per måned.`,
+    ],
+    [
+      "Les rapporten",
+      "Rapporten viser tilgjengelig teknisk informasjon, EU-kontroll og registrering. Eieropplysninger: not available in this data source.",
+    ],
+  ];
 
-export default function HowPage() {
   return (
     <div className="wrap" style={{ paddingTop: 28 }}>
       <h1>Slik virker det</h1>
