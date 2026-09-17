@@ -775,3 +775,20 @@ Keep planned search content separate from approved production publication.
 | [bilfunn-prod/content/pages/regnr.md](../content/pages/regnr.md) | Maintainer guidance or gated editorial copy; retain its approval and verification limitations. |
 | [bilfunn-prod/content/pages/regnummer.md](../content/pages/regnummer.md) | Maintainer guidance or gated editorial copy; retain its approval and verification limitations. |
 | [bilfunn-prod/content/pages/skiltnummer.md](../content/pages/skiltnummer.md) | Maintainer guidance or gated editorial copy; retain its approval and verification limitations. |
+
+## 47. Automate isolated local unit integration and browser verification
+
+Make tests repeatable without touching the existing demo or live-provider environment.
+
+**Contracts and failure behavior.** Use a dedicated sk_test database; destructive integration fixtures must never run on production. Configurable test ports keep the active preview available.
+
+**Verification.** Final snapshot passed 17 unit, 35 integration and 8 production browser tests.
+
+| File | Responsibility and entry points |
+| --- | --- |
+| [bilfunn-prod/playwright.config.ts](../playwright.config.ts) | Configuration or support file for the behavior and checks described above. |
+| [bilfunn-prod/scripts/test-local.mjs](../scripts/test-local.mjs) | Operational command; inspect its environment and safety gates before execution. |
+| [bilfunn-prod/tests/e2e/public.spec.ts](../tests/e2e/public.spec.ts) | Executable regression scenarios for this section; use the isolated environment described above. |
+| [bilfunn-prod/tests/unit/security.test.ts](../tests/unit/security.test.ts) | Executable regression scenarios for this section; use the isolated environment described above. |
+| [bilfunn-prod/vitest.config.mts](../vitest.config.mts) | Configuration or support file for the behavior and checks described above. |
+| [bilfunn-prod/vitest.integration.config.mts](../vitest.integration.config.mts) | Configuration or support file for the behavior and checks described above. |
