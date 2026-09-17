@@ -1,28 +1,17 @@
+import type { Config } from "@prisma/client";
 import { prisma } from "./db";
-import { env } from "./env";
-
-export type AppConfig = Awaited<ReturnType<typeof getConfig>>;
-
-let cached: { at: number; value: any } | null = null;
-const TTL = 30_000;
-
-export async function getConfig() {
-  if (cached && Date.now() - cached.at < TTL) return cached.value;
-  const row = await prisma.config.upsert({
-    where: { id: "default" },
-    update: {},
-    create: {
-      id: "default",
-      introPriceOre: env.defaults.introPriceOre,
-      renewalPriceOre: env.defaults.renewalPriceOre,
-      introDays: env.defaults.introDays,
-      ownerDataEnabled: env.owner.enabled,
-    },
-  });
-  cached = { at: Date.now(), value: row };
+import { redis } from "./redis";
+export type AppConfig = Config;
+/** Read server-owned commercial rules; fail explicitly when seed/configuration is missing instead of inventing prices. */
+export async function getConfig(): Promise<Config> {
+  const cached = await redis?.get<Config>("app:config");
+  if (cached) return cached;
+  const row = await prisma.config.findUnique({ where: { id: "default" } });
+  if (!row)
+    throw new Error("Run database seed before serving application traffic");
+  await redis?.set("app:config", row, { ex: 30 });
   return row;
 }
-
-export function invalidateConfig() {
-  cached = null;
+export async function invalidateConfig() {
+  await redis?.del("app:config");
 }

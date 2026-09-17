@@ -122,3 +122,17 @@ Report missing configuration before enabling production features.
 | [bilfunn-prod/scripts/check-config.ts](../scripts/check-config.ts) | Operational command; inspect its environment and safety gates before execution. |
 | [bilfunn-prod/src/instrumentation.ts](../src/instrumentation.ts) | Contracts: `register`. |
 | [bilfunn-prod/src/lib/env.ts](../src/lib/env.ts) | Contracts: `env`, `securityConfigurationErrors`, `integrationStatus`, `queueConfigured`, `emailConfigured`. |
+
+## 08. Bound database operations and seed configurable defaults
+
+Limit stalled database work and align SQL timestamps with Prisma UTC values.
+
+**Contracts and failure behavior.** Runtime uses DATABASE_URL; migrations use DIRECT_URL. Connections use UTC and bounded acquisition/query timeouts. Verify startup options on the hosted pooler. Seed is an upsert, not a commercial configuration reset.
+
+**Verification.** Readiness integration tests exercise a slow query and subsequent health recovery.
+
+| File | Responsibility and entry points |
+| --- | --- |
+| [bilfunn-prod/prisma/seed.ts](../prisma/seed.ts) | Configuration or support file for the behavior and checks described above. |
+| [bilfunn-prod/src/lib/config.ts](../src/lib/config.ts) | Contracts: `AppConfig`, `getConfig`, `invalidateConfig`. |
+| [bilfunn-prod/src/lib/db.ts](../src/lib/db.ts) | Contracts: `prisma`. |
