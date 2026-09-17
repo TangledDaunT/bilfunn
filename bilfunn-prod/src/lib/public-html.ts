@@ -2,6 +2,7 @@ import { createHash } from "crypto";
 import { designHeader, designFooter, plateForm } from "./design";
 import { env } from "./env";
 import { HttpError } from "./http";
+import { sessionNavigation } from "./session-navigation";
 export const escapeHtml = (value: unknown) =>
   String(value ?? "").replace(
     /[&<>"']/g,
@@ -33,6 +34,7 @@ export function publicHtml(options: {
     ],
   }).replace(/</g, "\\u003c");
   const hash = createHash("sha256").update(data).digest("base64");
+  const sessionHash = createHash("sha256").update(sessionNavigation).digest("base64");
   const robots =
     process.env.STAGING_MODE === "true" || options.index === false
       ? "noindex, follow"
@@ -40,7 +42,7 @@ export function publicHtml(options: {
   const html = `<!doctype html><html lang="nb"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${escapeHtml(options.title)}</title><meta name="description" content="${escapeHtml(options.description)}"><link rel="canonical" href="${escapeHtml(canonical)}"><meta name="robots" content="${robots}"><meta property="og:title" content="${escapeHtml(options.title)}"><meta property="og:description" content="${escapeHtml(options.description)}"><meta property="og:url" content="${escapeHtml(canonical)}"><meta property="og:type" content="website"><meta property="og:locale" content="nb_NO"><meta property="og:image" content="${escapeHtml(new URL("/opengraph-image", env.baseUrl).toString())}"><link rel="icon" href="/bilfunn-mark.svg" type="image/svg+xml"><link rel="preload" href="/fonts/subset-3.woff2" as="font" type="font/woff2" crossorigin><link rel="preload" href="/fonts/subset-1.woff2" as="font" type="font/woff2" crossorigin><link rel="stylesheet" href="/fonts/fonts.css"><link rel="stylesheet" href="/public.css"><link rel="stylesheet" href="/design.css"><script type="application/ld+json">${data}</script></head><body><a class="skip" href="#main">Hopp til innhold</a>${designHeader}<main id="main" class="${options.path === "/" ? "design-root" : ""}">${options.body}</main>${designFooter}</body></html>`;
   const status = options.status ?? 200;
   const ttl = status === 200 ? Math.max(0, Math.floor(options.ttl ?? 300)) : 0;
-  return new Response(html, {
+  return new Response(html.replace("</body>", `<script>${sessionNavigation}</script></body>`), {
     status,
     headers: {
       "Content-Type": "text/html; charset=utf-8",
@@ -50,7 +52,7 @@ export function publicHtml(options: {
         : "no-store",
       "CDN-Cache-Control": "no-store",
       "Vercel-Cache-Tag": (options.tags ?? ["editorial"]).join(","),
-      "Content-Security-Policy": `default-src 'none'; script-src 'sha256-${hash}'; style-src 'self'; img-src 'self'; font-src 'self'; form-action 'self'; base-uri 'none'; frame-ancestors 'none'; object-src 'none'`,
+      "Content-Security-Policy": `default-src 'none'; script-src 'sha256-${hash}' 'sha256-${sessionHash}'; connect-src 'self'; style-src 'self'; img-src 'self'; font-src 'self'; form-action 'self'; base-uri 'none'; frame-ancestors 'none'; object-src 'none'`,
       "X-Content-Type-Options": "nosniff",
       ...(options.retryAfter
         ? { "Retry-After": String(options.retryAfter) }

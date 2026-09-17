@@ -3,6 +3,21 @@ const origin =
   process.env.PRODUCTION_E2E === "1"
     ? `https://localhost:${process.env.TEST_HTTPS_PORT || 3101}`
     : `http://localhost:${process.env.TEST_HTTP_PORT || 3100}`;
+test("cached homepage resolves account navigation without caching identity", async ({
+  page,
+}) => {
+  await page.route("**/api/session", (route) =>
+    route.fulfill({
+      contentType: "application/json",
+      body: JSON.stringify({ authenticated: true, username: "demo" }),
+    }),
+  );
+  const response = await page.goto("/");
+  expect(await response!.text()).not.toContain(">demo</a>");
+  await expect(page.locator(".design-login")).toHaveText("demo");
+  await expect(page.locator(".design-login")).toHaveAttribute("href", "/konto");
+  await expect(page.locator('a[href="/logg-inn"]')).toHaveCount(0);
+});
 test("public homepage is usable without JavaScript", async ({ browser }) => {
   const context = await browser.newContext({
     javaScriptEnabled: false,
@@ -19,16 +34,19 @@ test("public homepage is usable without JavaScript", async ({ browser }) => {
     .getByRole("button", { name: "Søk kjøretøy", exact: true })
     .first()
     .click();
-  await expect(page).toHaveURL(/AB12345$/);
+  await expect(page).toHaveURL(/logg-inn\?next=/);
   await expect(page.getByRole("heading", { level: 1 })).toContainText(
-    "midlertidig",
+    "Logg inn",
   );
   await context.close();
 });
 test("disabled, invalid, and unpublished pages return honest statuses", async ({
   request,
 }) => {
-  expect((await request.get("/AB12345")).status()).toBe(503);
+  const denied = await request.get("/AB12345", { maxRedirects: 0 });
+  expect(denied.status()).toBe(303);
+  expect(denied.headers().location).toContain("/logg-inn?next=");
+  expect((await request.get("/api/vehicle/AB12345")).status()).toBe(401);
   expect((await request.get("/AB123456789")).status()).toBe(404);
   expect((await request.get("/hvem-eier-bilen")).status()).toBe(404);
   expect((await request.get("/blogg/nonexistent")).status()).toBe(404);

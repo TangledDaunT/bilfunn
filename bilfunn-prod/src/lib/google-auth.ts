@@ -9,7 +9,7 @@ export const oauthCookie =
 /** Permit only supported same-site post-login destinations, excluding protocol-relative and escaped redirects. */
 export function safeLoginNext(value: string | null | undefined) {
   return value &&
-    /^\/(?:konto|kasse|admin)(?:[/?]|$)/.test(value) &&
+    /^\/(?:konto|kasse|admin|rapport)(?:[/?]|$)/.test(value) &&
     !/[\\\r\n]/.test(value)
     ? value
     : "/konto";

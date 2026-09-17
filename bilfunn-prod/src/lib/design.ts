@@ -77,7 +77,7 @@ export const homepage = `<div class="design-home">
     "01",
     "f6c3f",
     "Finn riktig kjøretøy",
-    "Skriv inn skiltnummeret og se en gratis forhåndsvisning. Ingen konto nødvendig.",
+    "Logg inn og skriv inn skiltnummeret for å se tilgjengelige kjøretøyopplysninger.",
   ],
   [
     "02",

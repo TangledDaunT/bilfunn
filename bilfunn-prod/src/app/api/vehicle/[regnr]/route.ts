@@ -1,29 +1,34 @@
 export const dynamic = "force-dynamic";
-import { publicRecord } from "@/lib/vehicle/public-store";
-import { PublicData } from "@/lib/vehicle/public-model";
+import { getCurrentUser } from "@/lib/session";
+import { lookupVehicle, freePreview } from "@/lib/vehicle";
 import { normalizePlate, isValidPlate } from "@/lib/plate";
 import { HttpError } from "@/lib/http";
+import { enforceRateLimit } from "@/lib/rateLimit";
 export async function GET(
   _req: Request,
   { params }: { params: Promise<{ regnr: string }> },
 ) {
+  const headers = {
+    "Cache-Control": "private, no-store",
+    "Vercel-CDN-Cache-Control": "no-store",
+    "X-Robots-Tag": "noindex, nofollow",
+  };
   try {
+    const user = await getCurrentUser();
+    if (!user) throw new HttpError(401, "authentication_required");
     const plate = normalizePlate((await params).regnr);
     if (!isValidPlate(plate)) throw new HttpError(400, "invalid_plate");
-    const row = await publicRecord(plate, _req.headers);
-    return Response.json(PublicData.parse(row.data), {
-      headers: {
-        "Cache-Control": "public, max-age=0, must-revalidate",
-        "Vercel-CDN-Cache-Control": `public, s-maxage=${Math.max(0, Math.min(60, Math.floor((row.expiresAt.getTime() - Date.now()) / 1000)))}`,
-        "Vercel-Cache-Tag": `vehicle:${plate},vehicles`,
-      },
-    });
-  } catch (e) {
+    await enforceRateLimit(`preview:${user.id}`, 20, 3600_000);
+    const result = await lookupVehicle(plate);
+    if (!result.ok)
+      throw new HttpError(result.code === "NOT_FOUND" ? 404 : 503, result.code);
+    return Response.json(freePreview(result.vehicle), { headers });
+  } catch (error) {
     return Response.json(
-      { error: e instanceof HttpError ? e.code : "unavailable" },
+      { error: error instanceof HttpError ? error.code : "unavailable" },
       {
-        status: e instanceof HttpError ? e.status : 503,
-        headers: { "Cache-Control": "no-store", ...(e instanceof HttpError && e.retryAfter ? { "Retry-After": String(e.retryAfter) } : {}) },
+        status: error instanceof HttpError ? error.status : 503,
+        headers,
       },
     );
   }

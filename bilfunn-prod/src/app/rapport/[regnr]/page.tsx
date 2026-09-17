@@ -2,7 +2,7 @@ import Link from "next/link";
 import { headers } from "next/headers";
 import { clientIp, hashIp } from "@/lib/crypto";
 import { rateLimit } from "@/lib/rateLimit";
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { PlateTag } from "@/components/Plate";
 import { lookupVehicle } from "@/lib/vehicle";
 import { normalizePlate, isValidPlate } from "@/lib/plate";
@@ -38,8 +38,9 @@ export default async function ReportPage({
   const plate = normalizePlate(params.regnr);
   if (!isValidPlate(plate)) notFound();
 
-  const cfg = await getConfig();
   const user = await getCurrentUser();
+  if (!user) redirect(`/logg-inn?next=${encodeURIComponent(`/rapport/${plate}`)}`);
+  const cfg = await getConfig();
   const sub = user?.subscriptions?.[0] ?? null;
 
   if (!user || !hasAccess(sub, cfg.cancelKeepsAccess)) {

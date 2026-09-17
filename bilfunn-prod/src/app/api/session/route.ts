@@ -7,7 +7,7 @@ export const GET = endpoint(async () => {
   if (!user) throw new HttpError(401, "authentication_required");
   await enforceRateLimit(`session:${user.id}`, 120, 60_000);
   return Response.json(
-    { authenticated: true },
+    { authenticated: true, username: user.email.split("@")[0] },
     { headers: { "Cache-Control": "private, no-store" } },
   );
 });
