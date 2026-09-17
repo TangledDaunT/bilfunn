@@ -8,7 +8,12 @@ export type VehicleOwner = {
   city?: string | null;
   ownedSince?: string | null;
   ownerCount?: number | null;
-  history?: Array<{ name: string; type: "PERSON" | "COMPANY"; from: string; to?: string | null }>;
+  history?: Array<{
+    name: string;
+    type: "PERSON" | "COMPANY";
+    from: string;
+    to?: string | null;
+  }>;
 };
 
 export type Vehicle = {
@@ -40,6 +45,7 @@ export type Vehicle = {
   // inspection + registration
   lastInspection?: string | null;
   nextInspection?: string | null;
+  inspectionOverdue?: boolean;
   registrationStatus?: string | null;
   firstRegistered?: string | null;
   firstRegisteredNorway?: string | null;
@@ -48,11 +54,17 @@ export type Vehicle = {
   // owner — only populated when the owner agreement is live
   owner?: VehicleOwner | null;
   // provenance
-  source: "SVV" | "OWNER_API" | "SIMULATED";
+  source: "SVV" | "OWNER_API" | "SIMULATED" | "STAGING";
   fetchedAt: string;
   simulated: boolean;
 };
 
 export type LookupResult =
   | { ok: true; vehicle: Vehicle; latencyMs: number }
-  | { ok: false; code: "NOT_FOUND" | "PROVIDER_ERROR" | "INVALID_PLATE" | "UNAUTHORIZED"; status: number; latencyMs: number; message?: string };
+  | {
+      ok: false;
+      code: "NOT_FOUND" | "PROVIDER_ERROR" | "INVALID_PLATE" | "UNAUTHORIZED";
+      status: number;
+      latencyMs: number;
+      message?: string;
+    };

@@ -374,3 +374,18 @@ Distinguish basic database health from full dependency readiness.
 | [bilfunn-prod/src/app/api/health/route.ts](../src/app/api/health/route.ts) | HTTP GET handler for `/api/health`; authorization, validation and failure policy are described above. |
 | [bilfunn-prod/src/app/api/ready/route.ts](../src/app/api/ready/route.ts) | HTTP GET handler for `/api/ready`; authorization, validation and failure policy are described above. |
 | [bilfunn-prod/tests/integration/readiness.test.ts](../tests/integration/readiness.test.ts) | Executable regression scenarios for this section; use the isolated environment described above. |
+
+## 26. Normalize plate inputs and preserve typed vehicle previews
+
+Keep registration validation, provider selection and free-preview boundaries explicit.
+
+**Contracts and failure behavior.** Do not truncate invalid input. Simulated data is non-production only; freePreview is not evidence that every public route uses the same paywall fields.
+
+**Verification.** Vehicle-preview unit tests cover allowed preview fields and registration-year handling.
+
+| File | Responsibility and entry points |
+| --- | --- |
+| [bilfunn-prod/src/lib/plate.ts](../src/lib/plate.ts) | Contracts: `normalizePlate`, `PlateKind`, `plateKind`, `isValidPlate`, `prettyPlate`. |
+| [bilfunn-prod/src/lib/vehicle/index.ts](../src/lib/vehicle/index.ts) | Contracts: `lookupVehicle`, `freePreview`. |
+| [bilfunn-prod/src/lib/vehicle/types.ts](../src/lib/vehicle/types.ts) | Contracts: `VehicleOwner`, `Vehicle`, `LookupResult`. |
+| [bilfunn-prod/tests/unit/vehicle-preview.test.ts](../tests/unit/vehicle-preview.test.ts) | Executable regression scenarios for this section; use the isolated environment described above. |
