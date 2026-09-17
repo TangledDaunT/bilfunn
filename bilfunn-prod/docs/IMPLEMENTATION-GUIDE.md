@@ -81,3 +81,15 @@ Capture tables, indexes and receipt sequencing in a replayable migration.
 | File | Responsibility and entry points |
 | --- | --- |
 | [bilfunn-prod/prisma/migrations/202609170001_initial/migration.sql](../prisma/migrations/202609170001_initial/migration.sql) | Versioned schema transition; apply through Prisma migration deployment and retain historical ordering. |
+
+## 05. Retain queue erasure guarantees in a database migration
+
+Represent completed-job timestamps used by retention and erasure processing.
+
+**Contracts and failure behavior.** Do not delete migration history after deployment; job cleanup must preserve payment reconciliation records.
+
+**Verification.** Integration coverage includes queued-data erasure and job lifecycle behavior.
+
+| File | Responsibility and entry points |
+| --- | --- |
+| [bilfunn-prod/prisma/migrations/202609170002_job_erasure/migration.sql](../prisma/migrations/202609170002_job_erasure/migration.sql) | Versioned schema transition; apply through Prisma migration deployment and retain historical ordering. |
