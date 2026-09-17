@@ -403,3 +403,19 @@ Handle the actual SVV response shape without assuming technical access grants ow
 | [bilfunn-prod/src/lib/vehicle/maskinporten.ts](../src/lib/vehicle/maskinporten.ts) | Contracts: `maskinportenToken`. |
 | [bilfunn-prod/src/lib/vehicle/owner.ts](../src/lib/vehicle/owner.ts) | Contracts: `lookupOwnerVehicle`. |
 | [bilfunn-prod/src/lib/vehicle/svv.ts](../src/lib/vehicle/svv.ts) | Contracts: `lookupSvv`, `mapSvv`. |
+
+## 28. Gate public vehicle storage freshness and provider capacity
+
+Publish only approved fields with explicit retention, policy and provider quotas.
+
+**Contracts and failure behavior.** Separate fetched/changed/expiry dates; do not serve expired or suppressed data. Shared leases, quotas and circuit breaking protect upstream services. Cache invalidation must be verified on Vercel.
+
+**Verification.** Public-data integration tests cover fields, suppression, expiry and policy changes.
+
+| File | Responsibility and entry points |
+| --- | --- |
+| [bilfunn-prod/src/lib/public-cache.ts](../src/lib/public-cache.ts) | Contracts: `purgePublic`. |
+| [bilfunn-prod/src/lib/vehicle/public-model.ts](../src/lib/vehicle/public-model.ts) | Contracts: `PublicData`, `publicFields`, `IndexPolicy`, `defaultPolicy`, `eligible`. |
+| [bilfunn-prod/src/lib/vehicle/public-store.ts](../src/lib/vehicle/public-store.ts) | Contracts: `publicationEnabled`, `policy`, `refreshVehicle`, `publicSources`, `publicRecord`. |
+| [bilfunn-prod/src/lib/vehicle/quota.ts](../src/lib/vehicle/quota.ts) | Contracts: `takeProviderQuota`, `providerFailure`, `providerLease`. |
+| [bilfunn-prod/tests/integration/public-data.test.ts](../tests/integration/public-data.test.ts) | Executable regression scenarios for this section; use the isolated environment described above. |
