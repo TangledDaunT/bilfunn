@@ -177,3 +177,19 @@ Make request throttling block requests and communicate the actual wait.
 | --- | --- |
 | [bilfunn-prod/src/lib/rateLimit.ts](../src/lib/rateLimit.ts) | Contracts: `enforceRateLimit`, `rateLimit`, `pruneRateLimits`. |
 | [bilfunn-prod/src/lib/redis.ts](../src/lib/redis.ts) | Contracts: `redis`, `distributedLimit`. |
+
+## 12. Require verified email and revocable sessions for account access
+
+Replace email-only trust with single-use challenges and server-side opaque sessions.
+
+**Contracts and failure behavior.** Challenges expire, have bounded attempts and are atomically consumed. Cookies are HttpOnly, SameSite=Lax and Secure in production. Logout is idempotent; destructive actions require recent authentication.
+
+**Verification.** Authentication integration tests cover takeover, replay and session revocation.
+
+| File | Responsibility and entry points |
+| --- | --- |
+| [bilfunn-prod/src/app/api/auth/logout/route.ts](../src/app/api/auth/logout/route.ts) | HTTP POST handler for `/api/auth/logout`; authorization, validation and failure policy are described above. |
+| [bilfunn-prod/src/app/api/auth/request/route.ts](../src/app/api/auth/request/route.ts) | HTTP POST handler for `/api/auth/request`; authorization, validation and failure policy are described above. |
+| [bilfunn-prod/src/app/api/auth/verify/route.ts](../src/app/api/auth/verify/route.ts) | HTTP POST handler for `/api/auth/verify`; authorization, validation and failure policy are described above. |
+| [bilfunn-prod/src/app/api/session/route.ts](../src/app/api/session/route.ts) | HTTP GET handler for `/api/session`; authorization, validation and failure policy are described above. |
+| [bilfunn-prod/src/lib/session.ts](../src/lib/session.ts) | Contracts: `createSession`, `getSession`, `destroySession`, `getUserId`, `getCurrentUser`, `requireAdmin`, `requireRecentUser`. |

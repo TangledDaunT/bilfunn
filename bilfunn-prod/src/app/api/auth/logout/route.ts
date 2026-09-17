@@ -1,7 +1,8 @@
+export const dynamic = "force-dynamic";
 import { NextResponse } from "next/server";
 import { destroySession } from "@/lib/session";
-
-export async function POST() {
-  destroySession();
+import { endpoint } from "@/lib/http";
+export const POST = endpoint(async () => {
+  await destroySession();
   return NextResponse.json({ ok: true });
-}
+});

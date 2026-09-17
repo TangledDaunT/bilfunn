@@ -1,19 +1,22 @@
-import { SignJWT, jwtVerify } from "jose";
 import { cookies } from "next/headers";
+import { cache } from "react";
 import { prisma } from "./db";
-import { env } from "./env";
-
-const COOKIE = "bf_session";
-const MAX_AGE = 60 * 60 * 24 * 30;
-const key = () => new TextEncoder().encode(env.sessionSecret);
-
+import { randomToken, sha256 } from "./crypto";
+import { HttpError } from "./http";
+const COOKIE =
+  process.env.NODE_ENV === "production" ? "__Host-sk_session" : "sk_session";
+const MAX_AGE = 60 * 60 * 24 * 7;
+/** Issue an opaque bearer cookie; persist only its hash so database reads cannot recreate login credentials. */
 export async function createSession(userId: string) {
-  const token = await new SignJWT({ sub: userId })
-    .setProtectedHeader({ alg: "HS256" })
-    .setIssuedAt()
-    .setExpirationTime(`${MAX_AGE}s`)
-    .sign(key());
-  cookies().set(COOKIE, token, {
+  const token = randomToken();
+  await prisma.session.create({
+    data: {
+      id: sha256(token),
+      userId,
+      expiresAt: new Date(Date.now() + MAX_AGE * 1000),
+    },
+  });
+  (await cookies()).set(COOKIE, token, {
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",
     sameSite: "lax",
@@ -21,39 +24,57 @@ export async function createSession(userId: string) {
     maxAge: MAX_AGE,
   });
 }
-
-export function destroySession() {
-  cookies().set(COOKIE, "", { path: "/", maxAge: 0 });
+export const getSession = cache(async () => {
+  const token = (await cookies()).get(COOKIE)?.value;
+  if (!token || token.length > 128) return null;
+  return prisma.session.findFirst({
+    where: {
+      id: sha256(token),
+      expiresAt: { gt: new Date() },
+      user: { deletedAt: null },
+    },
+  });
+});
+export async function destroySession() {
+  const token = (await cookies()).get(COOKIE)?.value;
+  if (token) await prisma.session.deleteMany({ where: { id: sha256(token) } });
+  (await cookies()).set(COOKIE, "", {
+    path: "/",
+    maxAge: 0,
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "lax",
+  });
 }
-
-export async function getUserId(): Promise<string | null> {
-  const token = cookies().get(COOKIE)?.value;
-  if (!token) return null;
-  try {
-    const { payload } = await jwtVerify(token, key());
-    return (payload.sub as string) ?? null;
-  } catch {
-    return null;
-  }
+export async function getUserId() {
+  return (await getSession())?.userId ?? null;
 }
-
-export async function getCurrentUser() {
+export const getCurrentUser = cache(async () => {
   const id = await getUserId();
   if (!id) return null;
-  const user = await prisma.user.findFirst({
-    where: { id, deletedAt: null },
+  return prisma.user.findFirst({
+    where: { id, deletedAt: null, emailVerifiedAt: { not: null } },
     include: { subscriptions: { orderBy: { createdAt: "desc" }, take: 1 } },
   });
+});
+// An email allowlist is used only by the explicit seed/provisioning command.
+export async function requireAdmin() {
+  const [user, session] = await Promise.all([getCurrentUser(), getSession()]);
+  if (
+    !user ||
+    user.role !== "ADMIN" ||
+    !user.mfaSecret ||
+    !session?.mfaAt ||
+    Date.now() - session.mfaAt.getTime() > 15 * 60_000
+  )
+    return null;
   return user;
 }
-
-export function isAdminEmail(email?: string | null) {
-  if (!email) return false;
-  return env.adminEmails.includes(email.toLowerCase());
-}
-
-export async function requireAdmin() {
-  const user = await getCurrentUser();
-  if (!user || (user.role !== "ADMIN" && !isAdminEmail(user.email))) return null;
+/** Reject missing or stale authentication before exporting or deleting personal account data. */
+export async function requireRecentUser() {
+  const [user, session] = await Promise.all([getCurrentUser(), getSession()]);
+  if (!user) throw new HttpError(401, "authentication_required");
+  if (!session || Date.now() - session.createdAt.getTime() > 10 * 60_000)
+    throw new HttpError(403, "recent_authentication_required");
   return user;
 }
