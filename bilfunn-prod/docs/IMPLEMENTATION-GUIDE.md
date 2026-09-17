@@ -583,3 +583,18 @@ Show accepted terms and reconcile receipt status before offering paid access.
 | [bilfunn-prod/src/app/kvittering/error.tsx](../src/app/kvittering/error.tsx) | Client error boundary; renders recovery controls without exposing internal exception details. |
 | [bilfunn-prod/src/app/kvittering/loading.tsx](../src/app/kvittering/loading.tsx) | Server loading placeholder; keep its shape aligned with the final page and its status accessible. |
 | [bilfunn-prod/src/app/kvittering/page.tsx](../src/app/kvittering/page.tsx) | Page entry point; server rendering and server-owned data access. |
+
+## 39. Recover account actions and distinguish pending cancellation
+
+Make cancellation, deletion and logout failures visible and retryable.
+
+**Contracts and failure behavior.** Release busy state on errors; keep destructive-action errors inside dialogs. Pending provider cancellation is not a confirmed stop, and access text follows actual entitlement.
+
+**Verification.** A clean development browser verified deletion network recovery and re-enabled controls.
+
+| File | Responsibility and entry points |
+| --- | --- |
+| [bilfunn-prod/src/app/konto/AccountActions.tsx](../src/app/konto/AccountActions.tsx) | React UI component; client interaction/state boundary. |
+| [bilfunn-prod/src/app/konto/error.tsx](../src/app/konto/error.tsx) | Client error boundary; renders recovery controls without exposing internal exception details. |
+| [bilfunn-prod/src/app/konto/loading.tsx](../src/app/konto/loading.tsx) | Server loading placeholder; keep its shape aligned with the final page and its status accessible. |
+| [bilfunn-prod/src/app/konto/page.tsx](../src/app/konto/page.tsx) | Page entry point; server rendering and server-owned data access. |

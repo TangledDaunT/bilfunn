@@ -9,7 +9,12 @@ import AccountActions from "./AccountActions";
 
 export const dynamic = "force-dynamic";
 import { pageMetadata } from "@/lib/seo";
-export const metadata = pageMetadata("Min side", "Administrer Bilfunn-abonnementet, kvitteringer og søkehistorikk.", "/konto", false);
+export const metadata = pageMetadata(
+  "Min side",
+  "Administrer Skiltnummeret.no-abonnementet, kvitteringer og søkehistorikk.",
+  "/konto",
+  false,
+);
 
 const STATUS_LABEL: Record<string, string> = {
   TRIALING: "Introduksjonsperiode",
@@ -28,8 +33,16 @@ export default async function AccountPage() {
   const access = hasAccess(sub, cfg.cancelKeepsAccess);
   const allowance = await searchAllowance(user.id, sub);
   const [payments, searches] = await Promise.all([
-    prisma.payment.findMany({ where: { userId: user.id }, orderBy: { createdAt: "desc" }, take: 30 }),
-    prisma.search.findMany({ where: { userId: user.id }, orderBy: { createdAt: "desc" }, take: 25 }),
+    prisma.payment.findMany({
+      where: { userId: user.id },
+      orderBy: { createdAt: "desc" },
+      take: 30,
+    }),
+    prisma.search.findMany({
+      where: { userId: user.id },
+      orderBy: { createdAt: "desc" },
+      take: 25,
+    }),
   ]);
 
   return (
@@ -48,29 +61,44 @@ export default async function AccountPage() {
 
       {sub?.status === "PAST_DUE" && (
         <div className="note bad" style={{ marginBottom: 14 }}>
-          Siste betaling mislyktes. {sub.nextRetryAt && <>Vi prøver igjen {formatDate(sub.nextRetryAt)}. </>}
+          Siste betaling mislyktes.{" "}
+          {sub.nextRetryAt && (
+            <>Vi prøver igjen {formatDate(sub.nextRetryAt)}. </>
+          )}
           Oppdater betalingsmåten for å beholde tilgangen
           {sub.graceUntil && <> til {formatDate(sub.graceUntil)}</>}.
         </div>
       )}
       {sub?.status === "CANCELED" && (
         <div className="note warn" style={{ marginBottom: 14 }}>
-          Abonnementet er sagt opp. Du har tilgang til {formatDate(sub.periodEnd, "nb-NO", true)}, og det blir ingen
-          flere trekk.
+          {sub.cancelPending
+            ? "Oppsigelsen er registrert og venter på bekreftelse fra betalingsleverandøren."
+            : "Abonnementet er sagt opp."}{" "}
+          {access ? (
+            <>Du har tilgang til {formatDate(sub.periodEnd, "nb-NO", true)}.</>
+          ) : (
+            "Tilgangen er avsluttet."
+          )}
         </div>
       )}
 
       <div className="card">
         <div className="rowsplit">
           <h2 style={{ margin: 0 }}>Abonnement</h2>
-          <span className={`tag ${sub?.status === "PAST_DUE" ? "bad" : access ? "ok" : ""}`}>
+          <span
+            className={`tag ${sub?.status === "PAST_DUE" ? "bad" : access ? "ok" : ""}`}
+          >
             {sub ? STATUS_LABEL[sub.status] : "Ingen"}
           </span>
         </div>
         <dl className="spec" style={{ marginTop: 12 }}>
           <dt>Tilgang</dt>
           <dd>
-            {access ? <span className="tag ok">Aktiv</span> : <span className="tag bad">Ikke aktiv</span>}
+            {access ? (
+              <span className="tag ok">Aktiv</span>
+            ) : (
+              <span className="tag bad">Ikke aktiv</span>
+            )}
           </dd>
           <dt>Pris</dt>
           <dd>
@@ -115,7 +143,11 @@ export default async function AccountPage() {
                   <tr key={p.id}>
                     <td>{formatDate(p.createdAt)}</td>
                     <td>{p.receiptNumber}</td>
-                    <td>{p.kind === "INTRO" ? "Introduksjonstilgang" : "Månedsabonnement"}</td>
+                    <td>
+                      {p.kind === "INTRO"
+                        ? "Introduksjonstilgang"
+                        : "Månedsabonnement"}
+                    </td>
                     <td className="mono-num">{formatOre(p.amountOre)}</td>
                     <td className="mono-num">{formatOre(p.vatOre)}</td>
                     <td>
@@ -156,9 +188,19 @@ export default async function AccountPage() {
                     <td>{formatDate(s.createdAt, "nb-NO", true)}</td>
                     <td>{s.plate}</td>
                     <td>
-                      {s.result === "FOUND" ? <span className="tag ok">Treff</span> : <span className="tag">Ingen treff</span>}
+                      {s.result === "FOUND" ? (
+                        <span className="tag ok">Treff</span>
+                      ) : (
+                        <span className="tag">Ingen treff</span>
+                      )}
                     </td>
-                    <td>{s.result === "FOUND" && <Link href={`/rapport/${s.plate}`}>Åpne</Link>}</td>
+                    <td>
+                      {s.result === "FOUND" && (
+                        <Link prefetch={false} href={`/rapport/${s.plate}`}>
+                          Åpne
+                        </Link>
+                      )}
+                    </td>
                   </tr>
                 ))}
               </tbody>
@@ -172,8 +214,10 @@ export default async function AccountPage() {
       <div className="card">
         <h2>Konto og personvern</h2>
         <p className="muted small">
-          Du kan laste ned opplysningene vi har om deg, eller be om sletting. Sletting fjerner konto, søkehistorikk og
-          kontaktopplysninger. Betalingskvitteringer beholdes i regnskapet så lenge bokføringsloven krever.
+          Du kan laste ned opplysningene vi har om deg, eller be om sletting.
+          Sletting fjerner konto, søkehistorikk og kontaktopplysninger.
+          Betalingskvitteringer beholdes i regnskapet så lenge bokføringsloven
+          krever.
         </p>
         <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
           <a className="btn sm ghost" href="/api/account/export">
