@@ -792,3 +792,18 @@ Make tests repeatable without touching the existing demo or live-provider enviro
 | [bilfunn-prod/tests/unit/security.test.ts](../tests/unit/security.test.ts) | Executable regression scenarios for this section; use the isolated environment described above. |
 | [bilfunn-prod/vitest.config.mts](../vitest.config.mts) | Configuration or support file for the behavior and checks described above. |
 | [bilfunn-prod/vitest.integration.config.mts](../vitest.integration.config.mts) | Configuration or support file for the behavior and checks described above. |
+
+## 48. Run CI security checks and stage-only load scenarios
+
+Codify quality checks and reproducible load/failure exercises.
+
+**Contracts and failure behavior.** Never load-test production or real providers. Secret scanning is a pattern check, not proof that history is clean; distributed capacity requires measured evidence.
+
+**Verification.** Local secret scan and dependency audit passed; hosted CI and distributed load are not claimed.
+
+| File | Responsibility and entry points |
+| --- | --- |
+| [.github/workflows/production-checks.yml](../../.github/workflows/production-checks.yml) | Configuration or support file for the behavior and checks described above. |
+| [bilfunn-prod/scripts/scan-secrets.mjs](../scripts/scan-secrets.mjs) | Operational command; inspect its environment and safety gates before execution. |
+| [bilfunn-prod/tests/load/failure.js](../tests/load/failure.js) | Contracts: `options`. |
+| [bilfunn-prod/tests/load/mixed.js](../tests/load/mixed.js) | Contracts: `options`, `pages`, `searches`, `accounts`. |
