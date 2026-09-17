@@ -330,3 +330,18 @@ Separate user-facing requests from durable email delivery.
 | --- | --- |
 | [bilfunn-prod/src/lib/email/index.ts](../src/lib/email/index.ts) | Contracts: `sendEmail`, `deliverEmail`. |
 | [bilfunn-prod/src/lib/email/templates.ts](../src/lib/email/templates.ts) | Contracts: `EmailType`, `renderEmail`. |
+
+## 23. Run encrypted outbox jobs with leases retries and dead letters
+
+Make background work recoverable after failures and duplicate deliveries.
+
+**Contracts and failure behavior.** Claim work with bounded leases; retry with backoff, clear successful payloads and stop after the documented attempt limit. QStash callbacks require a valid signature.
+
+**Verification.** Job integration tests cover duplicate work and erasure; operators must rehearse recovery in staging.
+
+| File | Responsibility and entry points |
+| --- | --- |
+| [bilfunn-prod/src/app/api/jobs/route.ts](../src/app/api/jobs/route.ts) | HTTP POST handler for `/api/jobs`; authorization, validation and failure policy are described above. |
+| [bilfunn-prod/src/lib/jobs.ts](../src/lib/jobs.ts) | Contracts: `Db`, `enqueue`, `processJobs`. |
+| [bilfunn-prod/src/lib/wake-worker.ts](../src/lib/wake-worker.ts) | Contracts: `wakeWorker`, `publishWorker`. |
+| [bilfunn-prod/tests/integration/jobs.test.ts](../tests/integration/jobs.test.ts) | Executable regression scenarios for this section; use the isolated environment described above. |
