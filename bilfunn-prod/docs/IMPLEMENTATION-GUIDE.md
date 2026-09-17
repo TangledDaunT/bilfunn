@@ -807,3 +807,25 @@ Codify quality checks and reproducible load/failure exercises.
 | [bilfunn-prod/scripts/scan-secrets.mjs](../scripts/scan-secrets.mjs) | Operational command; inspect its environment and safety gates before execution. |
 | [bilfunn-prod/tests/load/failure.js](../tests/load/failure.js) | Contracts: `options`. |
 | [bilfunn-prod/tests/load/mixed.js](../tests/load/mixed.js) | Contracts: `options`, `pages`, `searches`, `accounts`. |
+
+## 49. Record release evidence and unresolved production gates
+
+Keep measured local results separate from approvals still needed for real billing.
+
+**Contracts and failure behavior.** Read the newest dated report when older documents disagree. Provider verification, legal approval, hosted pooling/CDN recovery and realistic load remain open.
+
+**Verification.** The readiness report includes command results, every changed file and saved Lighthouse/robots/sitemap evidence.
+
+| File | Responsibility and entry points |
+| --- | --- |
+| [bilfunn-prod/DEPLOYMENT.md](../DEPLOYMENT.md) | Maintainer guidance or gated editorial copy; retain its approval and verification limitations. |
+| [bilfunn-prod/docs/ARCHITECTURE.md](ARCHITECTURE.md) | Maintainer guidance or gated editorial copy; retain its approval and verification limitations. |
+| [bilfunn-prod/docs/FRONTEND-VERIFICATION.md](FRONTEND-VERIFICATION.md) | Maintainer guidance or gated editorial copy; retain its approval and verification limitations. |
+| [bilfunn-prod/docs/READINESS-PASS-2026-09-18.md](READINESS-PASS-2026-09-18.md) | Maintainer guidance or gated editorial copy; retain its approval and verification limitations. |
+| [bilfunn-prod/docs/RELEASE-STATUS.md](RELEASE-STATUS.md) | Maintainer guidance or gated editorial copy; retain its approval and verification limitations. |
+| [bilfunn-prod/docs/readiness-2026-09-18/homepage.png](readiness-2026-09-18/homepage.png) | Static design/font asset; preserve accessibility, dimensions and the original source exports when regenerating. |
+| [bilfunn-prod/docs/readiness-2026-09-18/lighthouse-home.html](readiness-2026-09-18/lighthouse-home.html) | Saved local verification artifact; evidence is specific to its environment and capture time. |
+| [bilfunn-prod/docs/readiness-2026-09-18/lighthouse-home.json](readiness-2026-09-18/lighthouse-home.json) | Saved local verification artifact; evidence is specific to its environment and capture time. |
+| [bilfunn-prod/docs/readiness-2026-09-18/robots.txt](readiness-2026-09-18/robots.txt) | Configuration or support file for the behavior and checks described above. |
+| [bilfunn-prod/docs/readiness-2026-09-18/sitemap-pages.xml](readiness-2026-09-18/sitemap-pages.xml) | Configuration or support file for the behavior and checks described above. |
+| [bilfunn-prod/docs/readiness-2026-09-18/sitemap.xml](readiness-2026-09-18/sitemap.xml) | Configuration or support file for the behavior and checks described above. |
