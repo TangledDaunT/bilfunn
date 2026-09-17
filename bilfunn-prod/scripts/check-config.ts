@@ -19,9 +19,9 @@ async function main() {
       "OWNER_API_BASE_URL",
     ])
       if (!process.env[key]) errors.push(key);
+  if (process.env.NODE_ENV === "production" && (!env.redis.url || !env.redis.token))
+    errors.push("UPSTASH_REDIS_REST_URL_OR_KV_REST_API_URL");
   for (const key of [
-    "UPSTASH_REDIS_REST_URL",
-    "UPSTASH_REDIS_REST_TOKEN",
     "QSTASH_TOKEN",
     "QSTASH_CURRENT_SIGNING_KEY",
     "QSTASH_NEXT_SIGNING_KEY",

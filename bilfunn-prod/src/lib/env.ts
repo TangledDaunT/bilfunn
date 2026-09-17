@@ -25,8 +25,8 @@ export const env = {
     passwordHash: s("DEMO_LOGIN_PASSWORD_HASH"),
   },
   redis: {
-    url: s("UPSTASH_REDIS_REST_URL"),
-    token: s("UPSTASH_REDIS_REST_TOKEN"),
+    url: s("UPSTASH_REDIS_REST_URL", s("KV_REST_API_URL")),
+    token: s("UPSTASH_REDIS_REST_TOKEN", s("KV_REST_API_TOKEN")),
   },
   qstash: {
     token: s("QSTASH_TOKEN"),
@@ -144,7 +144,7 @@ export function securityConfigurationErrors() {
     if (env.payments.mode === "mock") errors.push("PAYMENTS_MODE");
     if (env.svv.provider === "simulated") errors.push("VEHICLE_PROVIDER");
     if (!env.redis.url || !env.redis.token)
-      errors.push("UPSTASH_REDIS_REST_URL", "UPSTASH_REDIS_REST_TOKEN");
+      errors.push("UPSTASH_REDIS_REST_URL_OR_KV_REST_API_URL");
   }
   if (
     (env.svv.persist || env.svv.publish) &&
