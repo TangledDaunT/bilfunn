@@ -292,3 +292,15 @@ Keep concurrent searches within subscription limits and retry provider cancellat
 | [bilfunn-prod/src/app/api/subscription/cancel/route.ts](../src/app/api/subscription/cancel/route.ts) | HTTP POST, DELETE handler for `/api/subscription/cancel`; authorization, validation and failure policy are described above. |
 | [bilfunn-prod/src/lib/billing.ts](../src/lib/billing.ts) | Contracts: `hasAccess`, `cancelSubscription`, `reconcileCancellation`, `searchAllowance`, `consumeSearch`, `runBillingCycle`, `scheduleCharge`. |
 | [bilfunn-prod/tests/integration/transactions.test.ts](../tests/integration/transactions.test.ts) | Executable regression scenarios for this section; use the isolated environment described above. |
+
+## 20. Validate checkout ownership consent and pending payment state
+
+Persist accepted commercial terms before calling a payment provider.
+
+**Contracts and failure behavior.** Require a verified user and matching email. Reuse pending checkout identities; ambiguous provider outcomes require reconciliation instead of a new charge.
+
+**Verification.** Unauthenticated/cross-origin checkout and provider checkout unit tests are included in validation.
+
+| File | Responsibility and entry points |
+| --- | --- |
+| [bilfunn-prod/src/app/api/checkout/route.ts](../src/app/api/checkout/route.ts) | HTTP POST handler for `/api/checkout`; authorization, validation and failure policy are described above. |
