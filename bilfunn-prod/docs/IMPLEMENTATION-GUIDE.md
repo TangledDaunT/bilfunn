@@ -209,3 +209,16 @@ Implement OIDC login while protecting existing verified accounts.
 | [bilfunn-prod/src/lib/google-auth.ts](../src/lib/google-auth.ts) | Contracts: `googleConfigured`, `googleRedirect`, `oauthCookie`, `safeLoginNext`, `googleIdentity`, `exchangeGoogleCode`. |
 | [bilfunn-prod/tests/integration/google-auth.test.ts](../tests/integration/google-auth.test.ts) | Executable regression scenarios for this section; use the isolated environment described above. |
 | [bilfunn-prod/tests/unit/google-auth.test.ts](../tests/unit/google-auth.test.ts) | Executable regression scenarios for this section; use the isolated environment described above. |
+
+## 14. Require recent MFA for administrator operations
+
+Provision administrator access explicitly and validate one-time authenticator codes.
+
+**Contracts and failure behavior.** An email allowlist alone does not grant administrator access. Require recent authentication, protect the MFA secret, and prevent code-step replay.
+
+**Verification.** Security integration tests cover MFA replay; provisioning must run privately.
+
+| File | Responsibility and entry points |
+| --- | --- |
+| [bilfunn-prod/scripts/provision-admin.ts](../scripts/provision-admin.ts) | Operational command; inspect its environment and safety gates before execution. |
+| [bilfunn-prod/src/app/api/auth/mfa/route.ts](../src/app/api/auth/mfa/route.ts) | HTTP POST handler for `/api/auth/mfa`; authorization, validation and failure policy are described above. |
