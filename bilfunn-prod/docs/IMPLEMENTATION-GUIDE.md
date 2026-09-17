@@ -106,3 +106,19 @@ Add Google identity links and replay-resistant authorization attempts without re
 | --- | --- |
 | [bilfunn-prod/prisma/migrations/202609180001_google_identity/migration.sql](../prisma/migrations/202609180001_google_identity/migration.sql) | Versioned schema transition; apply through Prisma migration deployment and retain historical ordering. |
 | [bilfunn-prod/prisma/migrations/migration_lock.toml](../prisma/migrations/migration_lock.toml) | Configuration or support file for the behavior and checks described above. |
+
+## 07. Validate runtime configuration without exposing secrets
+
+Report missing configuration before enabling production features.
+
+**Contracts and failure behavior.** Only public base URL and analytics measurement IDs belong in NEXT_PUBLIC variables. Disabled provider modes remain available; mock payments must not run in production.
+
+**Verification.** npm run config:check prints names/status only; current launch blockers remain documented.
+
+| File | Responsibility and entry points |
+| --- | --- |
+| [bilfunn-prod/.env.example](../.env.example) | Configuration or support file for the behavior and checks described above. |
+| [bilfunn-prod/.gitignore](../.gitignore) | Configuration or support file for the behavior and checks described above. |
+| [bilfunn-prod/scripts/check-config.ts](../scripts/check-config.ts) | Operational command; inspect its environment and safety gates before execution. |
+| [bilfunn-prod/src/instrumentation.ts](../src/instrumentation.ts) | Contracts: `register`. |
+| [bilfunn-prod/src/lib/env.ts](../src/lib/env.ts) | Contracts: `env`, `securityConfigurationErrors`, `integrationStatus`, `queueConfigured`, `emailConfigured`. |
