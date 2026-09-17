@@ -237,3 +237,16 @@ Build provider checkout using server-owned prices and stable request identities.
 | [bilfunn-prod/src/lib/payments/stripe.ts](../src/lib/payments/stripe.ts) | Contracts: `stripe`, `stripeProvider`. |
 | [bilfunn-prod/src/lib/payments/types.ts](../src/lib/payments/types.ts) | Contracts: `StartCheckoutInput`, `StartCheckoutResult`, `ChargeInput`, `ChargeResult`, `PaymentProvider`. |
 | [bilfunn-prod/tests/unit/stripe-checkout.test.ts](../tests/unit/stripe-checkout.test.ts) | Executable regression scenarios for this section; use the isolated environment described above. |
+
+## 16. Bound Vipps requests and verify webhook signatures
+
+Support recurring-payment API calls with explicit deadlines and authenticated callbacks.
+
+**Contracts and failure behavior.** Provider credentials remain server-only. HMAC validation binds body and request details; provider responses must be reconciled before entitlement changes.
+
+**Verification.** Vipps state tests cover provider ordering; real callbacks and cancellation remain staging gates.
+
+| File | Responsibility and entry points |
+| --- | --- |
+| [bilfunn-prod/src/lib/payments/vipps-signature.ts](../src/lib/payments/vipps-signature.ts) | Contracts: `verifyVipps`. |
+| [bilfunn-prod/src/lib/payments/vipps.ts](../src/lib/payments/vipps.ts) | Contracts: `accessToken`, `vippsProvider`, `getVippsResource`, `getVippsChargePage`. |
