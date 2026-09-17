@@ -598,3 +598,22 @@ Make cancellation, deletion and logout failures visible and retryable.
 | [bilfunn-prod/src/app/konto/error.tsx](../src/app/konto/error.tsx) | Client error boundary; renders recovery controls without exposing internal exception details. |
 | [bilfunn-prod/src/app/konto/loading.tsx](../src/app/konto/loading.tsx) | Server loading placeholder; keep its shape aligned with the final page and its status accessible. |
 | [bilfunn-prod/src/app/konto/page.tsx](../src/app/konto/page.tsx) | Page entry point; server rendering and server-owned data access. |
+
+## 40. Guide email and administrator login through recoverable forms
+
+Provide Norwegian login feedback for invalid, expired, reused and throttled challenges.
+
+**Contracts and failure behavior.** Read tokens only from the intended flow, constrain redirects and present actual rate-limit wait times. MFA setup remains an explicit administrator operation.
+
+**Verification.** Production browser tests verify login network recovery and retry messaging.
+
+| File | Responsibility and entry points |
+| --- | --- |
+| [bilfunn-prod/src/app/admin/mfa/MfaForm.tsx](../src/app/admin/mfa/MfaForm.tsx) | React UI component; client interaction/state boundary. |
+| [bilfunn-prod/src/app/admin/mfa/error.tsx](../src/app/admin/mfa/error.tsx) | Client error boundary; renders recovery controls without exposing internal exception details. |
+| [bilfunn-prod/src/app/admin/mfa/loading.tsx](../src/app/admin/mfa/loading.tsx) | Server loading placeholder; keep its shape aligned with the final page and its status accessible. |
+| [bilfunn-prod/src/app/admin/mfa/page.tsx](../src/app/admin/mfa/page.tsx) | Page entry point; server rendering and server-owned data access. |
+| [bilfunn-prod/src/app/logg-inn/LoginForm.tsx](../src/app/logg-inn/LoginForm.tsx) | React UI component; client interaction/state boundary. |
+| [bilfunn-prod/src/app/logg-inn/error.tsx](../src/app/logg-inn/error.tsx) | Client error boundary; renders recovery controls without exposing internal exception details. |
+| [bilfunn-prod/src/app/logg-inn/loading.tsx](../src/app/logg-inn/loading.tsx) | Server loading placeholder; keep its shape aligned with the final page and its status accessible. |
+| [bilfunn-prod/src/app/logg-inn/page.tsx](../src/app/logg-inn/page.tsx) | Page entry point; server rendering and server-owned data access. |

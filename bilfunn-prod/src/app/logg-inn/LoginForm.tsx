@@ -1,118 +1,124 @@
 "use client";
-
+import { clientRequest, retryMessage } from "@/lib/client-request";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
-
-export default function LoginForm({ token }: { token?: string }) {
+import { useState } from "react";
+export default function LoginForm({
+  token,
+  next = "/konto",
+}: {
+  token?: string;
+  next?: string;
+}) {
   const router = useRouter();
   const [email, setEmail] = useState("");
   const [code, setCode] = useState("");
-  const [stage, setStage] = useState<"email" | "code">("email");
-  const [error, setError] = useState<string | null>(null);
+  const [sent, setSent] = useState(false);
   const [busy, setBusy] = useState(false);
-
-  useEffect(() => {
-    if (!token) return;
-    (async () => {
-      const res = await fetch("/api/auth/verify", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ token }),
-      });
-      if (res.ok) router.replace("/konto");
-      else setError("Lenken er brukt eller utløpt. Be om en ny kode.");
-    })();
-  }, [token, router]);
-
-  async function requestCode(e: React.FormEvent) {
+  const [error, setError] = useState("");
+  async function submit(e: React.FormEvent) {
     e.preventDefault();
-    setError(null);
     setBusy(true);
-    const res = await fetch("/api/auth/request", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email }),
-    });
-    setBusy(false);
-    if (!res.ok) return setError("Kunne ikke sende kode. Prøv igjen om litt.");
-    setStage("code");
+    setError("");
+    try {
+      const verify = sent || Boolean(token);
+      const res = await clientRequest(
+        `/api/auth/${verify ? "verify" : "request"}`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(
+            token ? { token } : verify ? { email, code } : { email },
+          ),
+        },
+      );
+      if (!res.ok) {
+        setError(
+          res.status === 429
+            ? retryMessage(res)
+            : res.status >= 500
+              ? "Innlogging er midlertidig utilgjengelig. Prøv igjen om litt."
+              : verify && res.status === 401
+                ? "Koden eller lenken er utløpt, brukt eller ugyldig. Be om en ny kode."
+                : "Kunne ikke fullføre. Kontroller opplysningene eller be om ny kode.",
+        );
+        return;
+      }
+      if (verify) {
+        router.replace(next);
+        router.refresh();
+      } else setSent(true);
+    } catch {
+      setError("Nettverksfeil. Prøv igjen.");
+    } finally {
+      setBusy(false);
+    }
   }
-
-  async function verify(e: React.FormEvent) {
-    e.preventDefault();
-    setError(null);
-    setBusy(true);
-    const res = await fetch("/api/auth/verify", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email, code }),
-    });
-    setBusy(false);
-    if (!res.ok) return setError("Koden er feil eller utløpt.");
-    router.push("/konto");
-    router.refresh();
-  }
-
   return (
-    <>
-      {error && (
-        <div className="note bad" style={{ marginBottom: 14 }} role="alert">
-          {error}
-        </div>
+    <form onSubmit={submit}>
+      {error && <p role="alert">{error}</p>}
+      {!token && (
+        <>
+          <label className="f" htmlFor="email">
+            E-postadresse
+          </label>
+          <input
+            className="input"
+            id="email"
+            type="email"
+            required
+            maxLength={254}
+            value={email}
+            disabled={sent}
+            onChange={(e) => setEmail(e.target.value)}
+          />
+          {sent && (
+            <>
+              <p>Vi har sendt en engangskode dersom adressen kan brukes.</p>
+              <label className="f" htmlFor="code">
+                Engangskode
+              </label>
+              <input
+                className="input"
+                id="code"
+                inputMode="numeric"
+                autoComplete="one-time-code"
+                pattern="[0-9]{6}"
+                maxLength={6}
+                required
+                value={code}
+                onChange={(e) => setCode(e.target.value)}
+              />
+            </>
+          )}
+        </>
       )}
-      {stage === "email" ? (
-        <form onSubmit={requestCode} noValidate>
-          <div className="field">
-            <label className="f" htmlFor="email">
-              E-postadresse
-            </label>
-            <input
-              className="input"
-              id="email"
-              type="email"
-              inputMode="email"
-              autoComplete="email"
-              placeholder="navn@eksempel.no"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-            />
-          </div>
-          <button className="btn block" disabled={busy}>
-            {busy ? <span className="spinner" /> : null} Send kode
-          </button>
-        </form>
-      ) : (
-        <form onSubmit={verify} noValidate>
-          <p className="small muted">
-            Vi har sendt en kode til <strong>{email}</strong>, hvis det finnes en konto med denne adressen.
-          </p>
-          <div className="field">
-            <label className="f" htmlFor="code">
-              Engangskode
-            </label>
-            <input
-              className="input"
-              id="code"
-              inputMode="numeric"
-              maxLength={6}
-              placeholder="000000"
-              value={code}
-              onChange={(e) => setCode(e.target.value.replace(/\D/g, ""))}
-              style={{ letterSpacing: ".4em", fontSize: "1.3rem", textAlign: "center" }}
-              required
-            />
-          </div>
-          <button className="btn block" disabled={busy}>
-            {busy ? <span className="spinner" /> : null} Logg inn
-          </button>
-          <p className="tiny center" style={{ marginTop: 10 }}>
-            <button type="button" className="linkbtn" onClick={() => setStage("email")}>
-              Bruk en annen e-postadresse
-            </button>
-          </p>
-        </form>
+      <button className="btn block" disabled={busy}>
+        {busy
+          ? "Vennligst vent…"
+          : sent || token
+            ? "Bekreft innlogging"
+            : "Send kode"}
+      </button>
+      {token && (
+        <a
+          className="linkbtn"
+          href={`/logg-inn?next=${encodeURIComponent(next)}`}
+        >
+          Be om ny kode
+        </a>
       )}
-    </>
+      {sent && (
+        <button
+          type="button"
+          className="linkbtn"
+          onClick={() => {
+            setSent(false);
+            setCode("");
+          }}
+        >
+          Be om ny kode
+        </button>
+      )}
+    </form>
   );
 }
