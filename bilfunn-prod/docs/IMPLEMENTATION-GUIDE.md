@@ -435,3 +435,19 @@ Allow controlled local diagnostics without weakening production authentication o
 | [bilfunn-prod/scripts/vehicle-api-preview.mjs](../scripts/vehicle-api-preview.mjs) | Operational command; inspect its environment and safety gates before execution. |
 | [bilfunn-prod/src/lib/vehicle/local-preview.ts](../src/lib/vehicle/local-preview.ts) | Contracts: `localPreviewEnabled`, `localVehiclePreview`. |
 | [bilfunn-prod/tests/unit/local-vehicle-preview.test.ts](../tests/unit/local-vehicle-preview.test.ts) | Executable regression scenarios for this section; use the isolated environment described above. |
+
+## 30. Provide authenticated imports and isolated staging fixtures
+
+Supply controlled data ingestion and repeatable load fixtures.
+
+**Contracts and failure behavior.** Validate imported plates, bound batches and authorize imports. Staging fixtures must never be mistaken for live registry data or sent to real providers during load tests.
+
+**Verification.** Run fixtures only in isolated staging; check-config reports the selected provider mode.
+
+| File | Responsibility and entry points |
+| --- | --- |
+| [bilfunn-prod/scripts/import-vehicles.ts](../scripts/import-vehicles.ts) | Operational command; inspect its environment and safety gates before execution. |
+| [bilfunn-prod/scripts/staging-fixture-server.mjs](../scripts/staging-fixture-server.mjs) | Operational command; inspect its environment and safety gates before execution. |
+| [bilfunn-prod/scripts/staging-fixtures.ts](../scripts/staging-fixtures.ts) | Operational command; inspect its environment and safety gates before execution. |
+| [bilfunn-prod/src/app/api/import/route.ts](../src/app/api/import/route.ts) | HTTP POST handler for `/api/import`; authorization, validation and failure policy are described above. |
+| [bilfunn-prod/src/lib/vehicle/staging.ts](../src/lib/vehicle/staging.ts) | Contracts: `lookupStaging`. |
