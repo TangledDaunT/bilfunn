@@ -136,3 +136,16 @@ Limit stalled database work and align SQL timestamps with Prisma UTC values.
 | [bilfunn-prod/prisma/seed.ts](../prisma/seed.ts) | Configuration or support file for the behavior and checks described above. |
 | [bilfunn-prod/src/lib/config.ts](../src/lib/config.ts) | Contracts: `AppConfig`, `getConfig`, `invalidateConfig`. |
 | [bilfunn-prod/src/lib/db.ts](../src/lib/db.ts) | Contracts: `prisma`. |
+
+## 09. Protect tokens and queued payloads with server-side cryptography
+
+Centralize random tokens, constant-time comparison, hashing and encryption.
+
+**Contracts and failure behavior.** Keep keys server-only. Store token hashes instead of bearer tokens; encrypted payloads still require retention and deletion policies.
+
+**Verification.** Security unit tests and account/job integration tests cover relevant boundaries.
+
+| File | Responsibility and entry points |
+| --- | --- |
+| [bilfunn-prod/src/lib/crypto.ts](../src/lib/crypto.ts) | Contracts: `sha256`, `hashIp`, `randomToken`, `randomCode`, `safeEqual`, `clientIp`. |
+| [bilfunn-prod/src/lib/seal.ts](../src/lib/seal.ts) | Contracts: `seal`, `unseal`. |
