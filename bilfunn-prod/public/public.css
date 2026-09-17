@@ -1,0 +1,158 @@
+* {
+  box-sizing: border-box;
+}
+body {
+  margin: 0;
+  background: #f4f7fb;
+  color: #14263d;
+  font:
+    17px/1.6 system-ui,
+    sans-serif;
+}
+header,
+main,
+footer {
+  max-width: 1100px;
+  margin: auto;
+  padding: 24px;
+}
+header {
+  display: flex;
+  justify-content: space-between;
+  gap: 20px;
+  align-items: center;
+}
+.brand {
+  font-size: 24px;
+  font-weight: 750;
+  text-decoration: none;
+}
+nav {
+  display: flex;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+a {
+  color: #075f80;
+}
+main {
+  min-height: 65vh;
+}
+h1 {
+  font-size: clamp(30px, 5vw, 52px);
+  line-height: 1.2;
+  letter-spacing: -0.03em;
+}
+h2 {
+  font-size: 25px;
+}
+.hero {
+  max-width: 760px;
+  padding: 38px 0;
+}
+form,
+.card {
+  background: white;
+  padding: 24px;
+  border: 1px solid #dbe3ed;
+  border-radius: 14px;
+  margin: 24px 0;
+}
+.search {
+  display: flex;
+  gap: 12px;
+  margin-top: 8px;
+}
+input,
+button {
+  font: inherit;
+  padding: 12px;
+  border: 1px solid #a8bacd;
+  border-radius: 7px;
+}
+input {
+  min-width: 0;
+  flex: 1;
+  text-transform: uppercase;
+}
+button,
+.cta {
+  background: #075f80;
+  color: white;
+  font-weight: 650;
+  cursor: pointer;
+  text-decoration: none;
+}
+.cta {
+  display: inline-block;
+  padding: 12px 20px;
+  border-radius: 7px;
+}
+dl {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px 20px;
+}
+dt {
+  color: #52657b;
+}
+dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+.muted {
+  color: #52657b;
+}
+.links {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+  gap: 12px;
+  padding: 0;
+  list-style: none;
+}
+.skip {
+  position: absolute;
+  left: -9999px;
+}
+.skip:focus {
+  left: 10px;
+  top: 0;
+  background: white;
+  z-index: 10;
+}
+footer {
+  border-top: 1px solid #dbe3ed;
+  font-size: 14px;
+}
+img {
+  max-width: 100%;
+  height: auto;
+}
+:focus-visible {
+  outline: 3px solid #ca8a04;
+  outline-offset: 3px;
+}
+@media (max-width: 600px) {
+  header {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+  nav {
+    gap: 12px;
+  }
+  header,
+  main,
+  footer {
+    padding: 18px;
+  }
+  .search {
+    flex-wrap: wrap;
+  }
+  dl {
+    grid-template-columns: 1fr;
+  }
+  dd {
+    margin-bottom: 10px;
+  }
+}
+main.design-root{max-width:none;margin:0;padding:0}main.design-root section{margin:0}.design-root .design-container{box-sizing:border-box}.design-root .sample-body dl{gap:10px}

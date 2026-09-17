@@ -692,3 +692,62 @@ Retain client interactivity only where state or browser events require it.
 | [bilfunn-prod/src/components/PlateSearch.tsx](../src/components/PlateSearch.tsx) | React UI component; client interaction/state boundary. |
 | [bilfunn-prod/src/components/StructuredData.tsx](../src/components/StructuredData.tsx) | React UI component; server-rendered presentation. |
 | [bilfunn-prod/src/lib/analytics.ts](../src/lib/analytics.ts) | Contracts: `track`. |
+
+## 45. Ship local design assets fonts and optimized image derivatives
+
+Remove avoidable image transfer and chained font discovery while preserving the design.
+
+**Contracts and failure behavior.** Original exports remain available; WebP files are derived delivery assets. Fixed dimensions reduce shift, fonts are self-hosted and contrast adjustments improve readability.
+
+**Verification.** Homepage Lighthouse improved from 72 to 94 performance and from 96 to 100 accessibility; CLS remained zero.
+
+| File | Responsibility and entry points |
+| --- | --- |
+| [bilfunn-prod/public/bilfunn-mark.svg](../public/bilfunn-mark.svg) | Static design/font asset; preserve accessibility, dimensions and the original source exports when regenerating. |
+| [bilfunn-prod/public/design.css](../public/design.css) | Shared styles and responsive/accessibility behavior; verify both desktop and narrow layouts after changes. |
+| [bilfunn-prod/public/design/01ec1.svg](../public/design/01ec1.svg) | Static design/font asset; preserve accessibility, dimensions and the original source exports when regenerating. |
+| [bilfunn-prod/public/design/027c5.svg](../public/design/027c5.svg) | Static design/font asset; preserve accessibility, dimensions and the original source exports when regenerating. |
+| [bilfunn-prod/public/design/05b06.svg](../public/design/05b06.svg) | Static design/font asset; preserve accessibility, dimensions and the original source exports when regenerating. |
+| [bilfunn-prod/public/design/11c66.svg](../public/design/11c66.svg) | Static design/font asset; preserve accessibility, dimensions and the original source exports when regenerating. |
+| [bilfunn-prod/public/design/15f42.svg](../public/design/15f42.svg) | Static design/font asset; preserve accessibility, dimensions and the original source exports when regenerating. |
+| [bilfunn-prod/public/design/2b25e.svg](../public/design/2b25e.svg) | Static design/font asset; preserve accessibility, dimensions and the original source exports when regenerating. |
+| [bilfunn-prod/public/design/336bb.svg](../public/design/336bb.svg) | Static design/font asset; preserve accessibility, dimensions and the original source exports when regenerating. |
+| [bilfunn-prod/public/design/37c3c.svg](../public/design/37c3c.svg) | Static design/font asset; preserve accessibility, dimensions and the original source exports when regenerating. |
+| [bilfunn-prod/public/design/39494.svg](../public/design/39494.svg) | Static design/font asset; preserve accessibility, dimensions and the original source exports when regenerating. |
+| [bilfunn-prod/public/design/3f032.svg](../public/design/3f032.svg) | Static design/font asset; preserve accessibility, dimensions and the original source exports when regenerating. |
+| [bilfunn-prod/public/design/41f9b.svg](../public/design/41f9b.svg) | Static design/font asset; preserve accessibility, dimensions and the original source exports when regenerating. |
+| [bilfunn-prod/public/design/4b544.svg](../public/design/4b544.svg) | Static design/font asset; preserve accessibility, dimensions and the original source exports when regenerating. |
+| [bilfunn-prod/public/design/4d30d.png](../public/design/4d30d.png) | Static design/font asset; preserve accessibility, dimensions and the original source exports when regenerating. |
+| [bilfunn-prod/public/design/4d30d.webp](../public/design/4d30d.webp) | Static design/font asset; preserve accessibility, dimensions and the original source exports when regenerating. |
+| [bilfunn-prod/public/design/52575.svg](../public/design/52575.svg) | Static design/font asset; preserve accessibility, dimensions and the original source exports when regenerating. |
+| [bilfunn-prod/public/design/5a02c.svg](../public/design/5a02c.svg) | Static design/font asset; preserve accessibility, dimensions and the original source exports when regenerating. |
+| [bilfunn-prod/public/design/658e5.svg](../public/design/658e5.svg) | Static design/font asset; preserve accessibility, dimensions and the original source exports when regenerating. |
+| [bilfunn-prod/public/design/68c1d.svg](../public/design/68c1d.svg) | Static design/font asset; preserve accessibility, dimensions and the original source exports when regenerating. |
+| [bilfunn-prod/public/design/70034.svg](../public/design/70034.svg) | Static design/font asset; preserve accessibility, dimensions and the original source exports when regenerating. |
+| [bilfunn-prod/public/design/716f3.svg](../public/design/716f3.svg) | Static design/font asset; preserve accessibility, dimensions and the original source exports when regenerating. |
+| [bilfunn-prod/public/design/7daf0.svg](../public/design/7daf0.svg) | Static design/font asset; preserve accessibility, dimensions and the original source exports when regenerating. |
+| [bilfunn-prod/public/design/7e516.svg](../public/design/7e516.svg) | Static design/font asset; preserve accessibility, dimensions and the original source exports when regenerating. |
+| [bilfunn-prod/public/design/894ef.svg](../public/design/894ef.svg) | Static design/font asset; preserve accessibility, dimensions and the original source exports when regenerating. |
+| [bilfunn-prod/public/design/9181b.svg](../public/design/9181b.svg) | Static design/font asset; preserve accessibility, dimensions and the original source exports when regenerating. |
+| [bilfunn-prod/public/design/adb1e.png](../public/design/adb1e.png) | Static design/font asset; preserve accessibility, dimensions and the original source exports when regenerating. |
+| [bilfunn-prod/public/design/adb1e.webp](../public/design/adb1e.webp) | Static design/font asset; preserve accessibility, dimensions and the original source exports when regenerating. |
+| [bilfunn-prod/public/design/adcc5.svg](../public/design/adcc5.svg) | Static design/font asset; preserve accessibility, dimensions and the original source exports when regenerating. |
+| [bilfunn-prod/public/design/cbb9e.svg](../public/design/cbb9e.svg) | Static design/font asset; preserve accessibility, dimensions and the original source exports when regenerating. |
+| [bilfunn-prod/public/design/cde78.svg](../public/design/cde78.svg) | Static design/font asset; preserve accessibility, dimensions and the original source exports when regenerating. |
+| [bilfunn-prod/public/design/d7796.svg](../public/design/d7796.svg) | Static design/font asset; preserve accessibility, dimensions and the original source exports when regenerating. |
+| [bilfunn-prod/public/design/d9846.svg](../public/design/d9846.svg) | Static design/font asset; preserve accessibility, dimensions and the original source exports when regenerating. |
+| [bilfunn-prod/public/design/dec40.png](../public/design/dec40.png) | Static design/font asset; preserve accessibility, dimensions and the original source exports when regenerating. |
+| [bilfunn-prod/public/design/dec40.webp](../public/design/dec40.webp) | Static design/font asset; preserve accessibility, dimensions and the original source exports when regenerating. |
+| [bilfunn-prod/public/design/e1966.svg](../public/design/e1966.svg) | Static design/font asset; preserve accessibility, dimensions and the original source exports when regenerating. |
+| [bilfunn-prod/public/design/e6d05.png](../public/design/e6d05.png) | Static design/font asset; preserve accessibility, dimensions and the original source exports when regenerating. |
+| [bilfunn-prod/public/design/e6d05.webp](../public/design/e6d05.webp) | Static design/font asset; preserve accessibility, dimensions and the original source exports when regenerating. |
+| [bilfunn-prod/public/design/ef333.svg](../public/design/ef333.svg) | Static design/font asset; preserve accessibility, dimensions and the original source exports when regenerating. |
+| [bilfunn-prod/public/design/f6c3f.svg](../public/design/f6c3f.svg) | Static design/font asset; preserve accessibility, dimensions and the original source exports when regenerating. |
+| [bilfunn-prod/public/fonts/Inter-LICENSE.txt](../public/fonts/Inter-LICENSE.txt) | Configuration or support file for the behavior and checks described above. |
+| [bilfunn-prod/public/fonts/Manrope-LICENSE.txt](../public/fonts/Manrope-LICENSE.txt) | Configuration or support file for the behavior and checks described above. |
+| [bilfunn-prod/public/fonts/fonts.css](../public/fonts/fonts.css) | Shared styles and responsive/accessibility behavior; verify both desktop and narrow layouts after changes. |
+| [bilfunn-prod/public/fonts/subset-0.woff2](../public/fonts/subset-0.woff2) | Static design/font asset; preserve accessibility, dimensions and the original source exports when regenerating. |
+| [bilfunn-prod/public/fonts/subset-1.woff2](../public/fonts/subset-1.woff2) | Static design/font asset; preserve accessibility, dimensions and the original source exports when regenerating. |
+| [bilfunn-prod/public/fonts/subset-2.woff2](../public/fonts/subset-2.woff2) | Static design/font asset; preserve accessibility, dimensions and the original source exports when regenerating. |
+| [bilfunn-prod/public/fonts/subset-3.woff2](../public/fonts/subset-3.woff2) | Static design/font asset; preserve accessibility, dimensions and the original source exports when regenerating. |
+| [bilfunn-prod/public/public.css](../public/public.css) | Shared styles and responsive/accessibility behavior; verify both desktop and narrow layouts after changes. |
