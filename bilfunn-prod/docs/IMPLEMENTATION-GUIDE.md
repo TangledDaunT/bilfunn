@@ -345,3 +345,18 @@ Make background work recoverable after failures and duplicate deliveries.
 | [bilfunn-prod/src/lib/jobs.ts](../src/lib/jobs.ts) | Contracts: `Db`, `enqueue`, `processJobs`. |
 | [bilfunn-prod/src/lib/wake-worker.ts](../src/lib/wake-worker.ts) | Contracts: `wakeWorker`, `publishWorker`. |
 | [bilfunn-prod/tests/integration/jobs.test.ts](../tests/integration/jobs.test.ts) | Executable regression scenarios for this section; use the isolated environment described above. |
+
+## 24. Schedule authenticated billing and expose bounded operations metrics
+
+Drive billing/reconciliation through durable work and protected operational endpoints.
+
+**Contracts and failure behavior.** CRON_SECRET protects cron and metrics. The minute schedule requires an appropriate hosting plan; local registration does not prove hosted execution. Do not log raw provider payloads.
+
+**Verification.** Unauthorized cron requests return 401; hosted scheduling, alerts and capacity remain unverified.
+
+| File | Responsibility and entry points |
+| --- | --- |
+| [bilfunn-prod/src/app/api/cron/billing/route.ts](../src/app/api/cron/billing/route.ts) | HTTP GET handler for `/api/cron/billing`; authorization, validation and failure policy are described above. |
+| [bilfunn-prod/src/app/api/ops/route.ts](../src/app/api/ops/route.ts) | HTTP GET handler for `/api/ops`; authorization, validation and failure policy are described above. |
+| [bilfunn-prod/src/lib/operations.ts](../src/lib/operations.ts) | Contracts: `operationalMetrics`. |
+| [bilfunn-prod/vercel.json](../vercel.json) | Configuration or support file for the behavior and checks described above. |
