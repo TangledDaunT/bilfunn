@@ -93,3 +93,16 @@ Represent completed-job timestamps used by retention and erasure processing.
 | File | Responsibility and entry points |
 | --- | --- |
 | [bilfunn-prod/prisma/migrations/202609170002_job_erasure/migration.sql](../prisma/migrations/202609170002_job_erasure/migration.sql) | Versioned schema transition; apply through Prisma migration deployment and retain historical ordering. |
+
+## 06. Persist external identities and single-use OAuth attempts
+
+Add Google identity links and replay-resistant authorization attempts without replacing email identity.
+
+**Contracts and failure behavior.** Provider/subject and provider/user uniqueness prevent conflicting links. OAuth attempts expire and are consumed once.
+
+**Verification.** Google authentication integration tests exercise linking and attempt replay.
+
+| File | Responsibility and entry points |
+| --- | --- |
+| [bilfunn-prod/prisma/migrations/202609180001_google_identity/migration.sql](../prisma/migrations/202609180001_google_identity/migration.sql) | Versioned schema transition; apply through Prisma migration deployment and retain historical ordering. |
+| [bilfunn-prod/prisma/migrations/migration_lock.toml](../prisma/migrations/migration_lock.toml) | Configuration or support file for the behavior and checks described above. |
