@@ -656,3 +656,23 @@ Stop legal pages from claiming they were updated every day.
 | [bilfunn-prod/src/app/personvern/page.tsx](../src/app/personvern/page.tsx) | Page entry point; server rendering and server-owned data access. |
 | [bilfunn-prod/src/app/vilkar/page.tsx](../src/app/vilkar/page.tsx) | Page entry point; server rendering and server-owned data access. |
 | [bilfunn-prod/src/components/Legal.tsx](../src/components/Legal.tsx) | React UI component; server-rendered presentation. |
+
+## 43. Add application-wide error recovery metadata and loading shells
+
+Handle root/segment failures and provide stable page placeholders.
+
+**Contracts and failure behavior.** Private pages use nonce CSP and no-store; browser mutations require the configured same origin. Global error UI must stand alone without relying on a working root layout.
+
+**Verification.** Production build and CSP/browser tests pass; no ignoreBuildErrors setting is enabled.
+
+| File | Responsibility and entry points |
+| --- | --- |
+| [bilfunn-prod/next.config.mjs](../next.config.mjs) | Configuration or support file for the behavior and checks described above. |
+| [bilfunn-prod/src/app/error.tsx](../src/app/error.tsx) | Client error boundary; renders recovery controls without exposing internal exception details. |
+| [bilfunn-prod/src/app/global-error.tsx](../src/app/global-error.tsx) | Client error boundary; renders recovery controls without exposing internal exception details. |
+| [bilfunn-prod/src/app/globals.css](../src/app/globals.css) | Shared styles and responsive/accessibility behavior; verify both desktop and narrow layouts after changes. |
+| [bilfunn-prod/src/app/layout.tsx](../src/app/layout.tsx) | Shared document/segment layout; validation here runs outside the segment loading boundary. |
+| [bilfunn-prod/src/app/opengraph-image.tsx](../src/app/opengraph-image.tsx) | Contracts: `alt`, `size`, `contentType`. |
+| [bilfunn-prod/src/components/PageSkeleton.tsx](../src/components/PageSkeleton.tsx) | React UI component; server-rendered presentation. |
+| `bilfunn-prod/src/middleware.ts` (removed) | Retired file; its replacement and behavior are described in this section. |
+| [bilfunn-prod/src/proxy.ts](../src/proxy.ts) | Contracts: `proxy`, `config`. |
