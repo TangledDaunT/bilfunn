@@ -639,3 +639,20 @@ Present pricing, contact and service guidance with bounded submissions.
 | [bilfunn-prod/src/app/priser/error.tsx](../src/app/priser/error.tsx) | Client error boundary; renders recovery controls without exposing internal exception details. |
 | [bilfunn-prod/src/app/priser/loading.tsx](../src/app/priser/loading.tsx) | Server loading placeholder; keep its shape aligned with the final page and its status accessible. |
 | [bilfunn-prod/src/app/priser/page.tsx](../src/app/priser/page.tsx) | Page entry point; server rendering and server-owned data access. |
+
+## 42. Label legal drafts honestly and remove fabricated update dates
+
+Stop legal pages from claiming they were updated every day.
+
+**Contracts and failure behavior.** Legal copy remains a draft requiring business/legal approval; do not invent a revision date. Placeholder identity and static commercial terms remain release blockers.
+
+**Verification.** All five legal pages hydrate without translation extensions; no warning suppression was added.
+
+| File | Responsibility and entry points |
+| --- | --- |
+| [bilfunn-prod/src/app/angrerett/page.tsx](../src/app/angrerett/page.tsx) | Page entry point; server rendering and server-owned data access. |
+| [bilfunn-prod/src/app/cookies/page.tsx](../src/app/cookies/page.tsx) | Page entry point; server rendering and server-owned data access. |
+| [bilfunn-prod/src/app/datakilder/page.tsx](../src/app/datakilder/page.tsx) | Page entry point; server rendering and server-owned data access. |
+| [bilfunn-prod/src/app/personvern/page.tsx](../src/app/personvern/page.tsx) | Page entry point; server rendering and server-owned data access. |
+| [bilfunn-prod/src/app/vilkar/page.tsx](../src/app/vilkar/page.tsx) | Page entry point; server rendering and server-owned data access. |
+| [bilfunn-prod/src/components/Legal.tsx](../src/components/Legal.tsx) | React UI component; server-rendered presentation. |

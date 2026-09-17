@@ -1,8 +1,14 @@
-export default function LegalPage({ title, sections }: { title: string; sections: Array<[string, React.ReactNode]> }) {
+export default function LegalPage({
+  title,
+  sections,
+}: {
+  title: string;
+  sections: Array<[string, React.ReactNode]>;
+}) {
   return (
     <div className="wrap" style={{ paddingTop: 28, maxWidth: 720 }}>
       <h1>{title}</h1>
-      <p className="tiny">Sist oppdatert {new Date().toLocaleDateString("nb-NO")}</p>
+      <p className="tiny">Utkast til gjennomgang før lansering.</p>
       <div className="card">
         {sections.map(([h, body]) => (
           <section key={h}>
