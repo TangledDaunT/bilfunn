@@ -451,3 +451,18 @@ Supply controlled data ingestion and repeatable load fixtures.
 | [bilfunn-prod/scripts/staging-fixtures.ts](../scripts/staging-fixtures.ts) | Operational command; inspect its environment and safety gates before execution. |
 | [bilfunn-prod/src/app/api/import/route.ts](../src/app/api/import/route.ts) | HTTP POST handler for `/api/import`; authorization, validation and failure policy are described above. |
 | [bilfunn-prod/src/lib/vehicle/staging.ts](../src/lib/vehicle/staging.ts) | Contracts: `lookupStaging`. |
+
+## 31. Control SEO eligibility and immediate vehicle suppression
+
+Make publication policy editable by authenticated administrators with recent MFA.
+
+**Contracts and failure behavior.** Queue bounded reindex work after policy changes. Suppression clears public data and purges cache tags; local behavior cannot certify CDN purge propagation.
+
+**Verification.** Public-data and authorization tests cover policy and privacy boundaries.
+
+| File | Responsibility and entry points |
+| --- | --- |
+| [bilfunn-prod/src/app/api/admin/seo/route.ts](../src/app/api/admin/seo/route.ts) | HTTP POST handler for `/api/admin/seo`; authorization, validation and failure policy are described above. |
+| [bilfunn-prod/src/app/api/admin/vehicles/route.ts](../src/app/api/admin/vehicles/route.ts) | HTTP POST handler for `/api/admin/vehicles`; authorization, validation and failure policy are described above. |
+| [bilfunn-prod/src/lib/seo-reindex.ts](../src/lib/seo-reindex.ts) | Contracts: `reindex`. |
+| [bilfunn-prod/src/lib/seo.ts](../src/lib/seo.ts) | Contracts: `pageMetadata`. |
