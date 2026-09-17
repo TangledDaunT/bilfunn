@@ -1,53 +1,59 @@
 import Stripe from "stripe";
 import { env } from "../env";
-import type { ChargeInput, ChargeResult, PaymentProvider, StartCheckoutInput, StartCheckoutResult } from "./types";
-
-/**
- * Cards via Stripe Billing.
- *
- * The NOK 3 / 3 days / NOK 249 month structure is expressed as a subscription on
- * STRIPE_PRICE_MONTHLY with a 3-day trial plus a one-off invoice item of NOK 3,
- * so Stripe owns the renewal schedule and we react to invoice webhooks. Note the
- * fixed per-transaction fee makes the NOK 3 charge roughly break-even — that is an
- * acquisition cost, not a revenue line.
- */
+import type { PaymentProvider } from "./types";
 export const stripe = env.payments.stripe.secret
-  ? new Stripe(env.payments.stripe.secret, { apiVersion: "2024-11-20.acacia" as any })
+  ? new Stripe(env.payments.stripe.secret, {
+      timeout: 8000,
+      maxNetworkRetries: 0,
+    })
   : null;
-
 export const stripeProvider: PaymentProvider = {
   name: "STRIPE",
-
-  async startCheckout(input: StartCheckoutInput): Promise<StartCheckoutResult> {
-    if (!stripe) throw new Error("STRIPE_SECRET_KEY is not set");
-
-    const customer = await stripe.customers.create({
-      email: input.email,
-      metadata: { userId: input.userId },
-    });
-
-    const session = await stripe.checkout.sessions.create({
-      mode: "subscription",
-      customer: customer.id,
-      locale: "nb",
-      line_items: [{ price: env.payments.stripe.priceMonthly, quantity: 1 }],
-      subscription_data: {
-        trial_period_days: input.introDays,
-        metadata: { userId: input.userId, plate: input.plate },
-      },
-      // The NOK 3 is charged immediately alongside the trial.
-      payment_method_collection: "always",
-      success_url: `${input.returnUrl}?session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${env.baseUrl}/kjoretoy/${input.plate}?avbrutt=1`,
-      consent_collection: { terms_of_service: "required" },
-      custom_text: {
-        submit: {
-          message: `Du belastes ${(input.introPriceOre / 100).toFixed(0)} kr nå for ${input.introDays} dagers tilgang. Deretter ${(input.renewalPriceOre / 100).toFixed(0)} kr per måned til du sier opp.`,
+  async startCheckout(input) {
+    if (!stripe) throw new Error("Stripe disabled");
+    const [intro, monthly] = await Promise.all([
+      stripe.prices.retrieve(env.payments.stripe.priceIntro),
+      stripe.prices.retrieve(env.payments.stripe.priceMonthly),
+    ]);
+    if (
+      !intro.active ||
+      intro.type !== "one_time" ||
+      intro.currency !== "nok" ||
+      intro.unit_amount !== input.introPriceOre ||
+      !monthly.active ||
+      monthly.currency !== "nok" ||
+      monthly.unit_amount !== input.renewalPriceOre ||
+      monthly.recurring?.interval !== "month" ||
+      monthly.recurring.interval_count !== 1
+    )
+      throw new Error("Configured prices disagree with displayed terms");
+    const customer = await stripe.customers.create(
+      { email: input.email, metadata: { userId: input.userId } },
+      { idempotencyKey: `customer:${input.checkoutId}` },
+    );
+    const success = new URL(input.returnUrl);
+    success.searchParams.set("checkout", input.checkoutId);
+    const session = await stripe.checkout.sessions.create(
+      {
+        mode: "subscription",
+        customer: customer.id,
+        locale: "nb",
+        line_items: [
+          { price: intro.id, quantity: 1 },
+          { price: monthly.id, quantity: 1 },
+        ],
+        subscription_data: {
+          trial_period_days: input.introDays,
+          metadata: { userId: input.userId, checkoutId: input.checkoutId },
         },
+        payment_method_collection: "always",
+        success_url: success.toString(),
+        cancel_url: `${env.baseUrl}/${input.plate}?avbrutt=1`,
+        consent_collection: { terms_of_service: "required" },
+        metadata: { userId: input.userId, checkoutId: input.checkoutId },
       },
-      metadata: { userId: input.userId, plate: input.plate, introPriceOre: String(input.introPriceOre) },
-    });
-
+      { idempotencyKey: `checkout:${input.checkoutId}` },
+    );
     return {
       provider: "STRIPE",
       redirectUrl: session.url,
@@ -55,20 +61,32 @@ export const stripeProvider: PaymentProvider = {
       reference: session.id,
     };
   },
-
-  async chargeRecurring(_input: ChargeInput): Promise<ChargeResult> {
-    // Stripe Billing drives its own renewal cycle; our cron does not charge cards.
-    // Outcomes arrive via invoice.paid / invoice.payment_failed webhooks.
-    return { ok: true, providerPaymentId: null };
+  async chargeRecurring() {
+    throw new Error("Stripe owns recurring charges");
   },
-
   async cancel({ subscriptionId }) {
-    if (!stripe || !subscriptionId) return;
-    await stripe.subscriptions.update(subscriptionId, { cancel_at_period_end: true });
+    if (!stripe || !subscriptionId) throw new Error("Missing subscription");
+    await stripe.subscriptions.update(subscriptionId, {
+      cancel_at_period_end: true,
+    });
   },
-
-  async refund(providerPaymentId: string, amountOre: number) {
-    if (!stripe) return;
-    await stripe.refunds.create({ payment_intent: providerPaymentId, amount: amountOre });
+  async refund(id, amount) {
+    if (!stripe) throw new Error("Stripe disabled");
+    const invoice = await stripe.invoices.retrieve(id);
+    const intent =
+      typeof invoice.payment_intent === "string"
+        ? invoice.payment_intent
+        : invoice.payment_intent?.id;
+    if (
+      !intent ||
+      !Number.isSafeInteger(amount) ||
+      amount <= 0 ||
+      amount > invoice.amount_paid
+    )
+      throw new Error("Invalid refund request");
+    await stripe.refunds.create(
+      { payment_intent: intent, amount },
+      { idempotencyKey: `refund:${id}:${amount}` },
+    );
   },
 };

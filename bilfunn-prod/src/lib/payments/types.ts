@@ -1,4 +1,5 @@
 export type StartCheckoutInput = {
+  checkoutId: string;
   userId: string;
   email: string;
   introPriceOre: number;
@@ -34,7 +35,15 @@ export type ChargeResult = {
 export interface PaymentProvider {
   readonly name: "MOCK" | "STRIPE" | "VIPPS";
   startCheckout(input: StartCheckoutInput): Promise<StartCheckoutResult>;
-  chargeRecurring(input: ChargeInput & { agreementId?: string | null; customerId?: string | null }): Promise<ChargeResult>;
-  cancel(handle: { agreementId?: string | null; subscriptionId?: string | null }): Promise<void>;
+  chargeRecurring(
+    input: ChargeInput & {
+      agreementId?: string | null;
+      customerId?: string | null;
+    },
+  ): Promise<ChargeResult>;
+  cancel(handle: {
+    agreementId?: string | null;
+    subscriptionId?: string | null;
+  }): Promise<void>;
   refund(providerPaymentId: string, amountOre: number): Promise<void>;
 }

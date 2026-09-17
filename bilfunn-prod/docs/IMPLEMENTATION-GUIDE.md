@@ -222,3 +222,18 @@ Provision administrator access explicitly and validate one-time authenticator co
 | --- | --- |
 | [bilfunn-prod/scripts/provision-admin.ts](../scripts/provision-admin.ts) | Operational command; inspect its environment and safety gates before execution. |
 | [bilfunn-prod/src/app/api/auth/mfa/route.ts](../src/app/api/auth/mfa/route.ts) | HTTP POST handler for `/api/auth/mfa`; authorization, validation and failure policy are described above. |
+
+## 15. Create idempotent Stripe checkout from accepted commercial terms
+
+Build provider checkout using server-owned prices and stable request identities.
+
+**Contracts and failure behavior.** Client amounts cannot select a price. A checkout redirect is not proof of payment; access depends on verified provider state. Keep disabled/mock adapters isolated from production.
+
+**Verification.** Stripe checkout unit tests verify introductory line items and return behavior.
+
+| File | Responsibility and entry points |
+| --- | --- |
+| [bilfunn-prod/src/lib/payments/index.ts](../src/lib/payments/index.ts) | Contracts: `availableMethods`, `getProvider`, `providerFor`. |
+| [bilfunn-prod/src/lib/payments/stripe.ts](../src/lib/payments/stripe.ts) | Contracts: `stripe`, `stripeProvider`. |
+| [bilfunn-prod/src/lib/payments/types.ts](../src/lib/payments/types.ts) | Contracts: `StartCheckoutInput`, `StartCheckoutResult`, `ChargeInput`, `ChargeResult`, `PaymentProvider`. |
+| [bilfunn-prod/tests/unit/stripe-checkout.test.ts](../tests/unit/stripe-checkout.test.ts) | Executable regression scenarios for this section; use the isolated environment described above. |
