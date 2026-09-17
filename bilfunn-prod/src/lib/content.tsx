@@ -17,7 +17,7 @@ export const FAQ_ITEMS: Array<[string, string]> = [
   ],
   [
     "Hvor kommer opplysningene fra?",
-    "Tekniske kjøretøydata hentes fra Statens vegvesens åpne API for kjøretøyopplysninger. Eieropplysninger krever en egen avtale og vises bare når den er på plass. Bilfunn er en uavhengig kommersiell tjeneste uten tilknytning til Statens vegvesen.",
+    "Tekniske kjøretøydata hentes fra Statens vegvesens åpne API for kjøretøyopplysninger. Eieropplysninger krever en egen avtale og vises bare når den er på plass. Skiltnummeret.no er en uavhengig kommersiell tjeneste uten tilknytning til Statens vegvesen.",
   ],
   [
     "Hvorfor finner dere ikke kjøretøyet mitt?",

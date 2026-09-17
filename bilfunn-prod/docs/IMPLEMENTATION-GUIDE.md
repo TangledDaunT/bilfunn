@@ -502,3 +502,18 @@ Replace conflicting page routes with complete public responses and canonical red
 | `bilfunn-prod/src/app/page.tsx` (removed) | Retired file; its replacement and behavior are described in this section. |
 | [bilfunn-prod/src/app/route.ts](../src/app/route.ts) | HTTP GET handler for `/`; authorization, validation and failure policy are described above. |
 | [bilfunn-prod/src/app/sok/route.ts](../src/app/sok/route.ts) | HTTP GET handler for `/sok`; authorization, validation and failure policy are described above. |
+
+## 34. Publish validated editorial content with sanitized HTML
+
+Keep unpublished or malformed editorial content out of public pages.
+
+**Contracts and failure behavior.** Validate frontmatter, require publication/length criteria, sanitize rendered Markdown and constrain slugs. Draft files are scaffolding, not approved legal or marketing claims.
+
+**Verification.** Inspect rendered pages and sitemap membership when publishing content.
+
+| File | Responsibility and entry points |
+| --- | --- |
+| [bilfunn-prod/src/app/blogg/[slug]/route.ts](../src/app/blogg/[slug]/route.ts) | HTTP GET handler for `/blogg/[slug]`; authorization, validation and failure policy are described above. |
+| [bilfunn-prod/src/app/blogg/route.ts](../src/app/blogg/route.ts) | HTTP GET handler for `/blogg`; authorization, validation and failure policy are described above. |
+| [bilfunn-prod/src/lib/content.tsx](../src/lib/content.tsx) | Contracts: `FAQ_ITEMS`. |
+| [bilfunn-prod/src/lib/editorial.ts](../src/lib/editorial.ts) | Contracts: `topics`, `article`, `articles`. |
