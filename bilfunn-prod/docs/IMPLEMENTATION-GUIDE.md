@@ -565,3 +565,21 @@ Protect report data and distinguish invalid inputs, missing vehicles and upstrea
 | [bilfunn-prod/src/app/rapport/[regnr]/layout.tsx](../src/app/rapport/[regnr]/layout.tsx) | Shared document/segment layout; validation here runs outside the segment loading boundary. |
 | [bilfunn-prod/src/app/rapport/[regnr]/loading.tsx](../src/app/rapport/[regnr]/loading.tsx) | Server loading placeholder; keep its shape aligned with the final page and its status accessible. |
 | [bilfunn-prod/src/app/rapport/[regnr]/page.tsx](../src/app/rapport/[regnr]/page.tsx) | Page entry point; server rendering and server-owned data access. |
+
+## 38. Present checkout and receipts without assuming payment success
+
+Show accepted terms and reconcile receipt status before offering paid access.
+
+**Contracts and failure behavior.** A browser redirect or lost response cannot establish payment outcome. Report links disable speculative prefetch because rendering can consume allowance.
+
+**Verification.** Checkout denial and error-recovery browser tests pass; live provider completion remains unverified.
+
+| File | Responsibility and entry points |
+| --- | --- |
+| [bilfunn-prod/src/app/kasse/CheckoutForm.tsx](../src/app/kasse/CheckoutForm.tsx) | React UI component; client interaction/state boundary. |
+| [bilfunn-prod/src/app/kasse/error.tsx](../src/app/kasse/error.tsx) | Client error boundary; renders recovery controls without exposing internal exception details. |
+| [bilfunn-prod/src/app/kasse/loading.tsx](../src/app/kasse/loading.tsx) | Server loading placeholder; keep its shape aligned with the final page and its status accessible. |
+| [bilfunn-prod/src/app/kasse/page.tsx](../src/app/kasse/page.tsx) | Page entry point; server rendering and server-owned data access. |
+| [bilfunn-prod/src/app/kvittering/error.tsx](../src/app/kvittering/error.tsx) | Client error boundary; renders recovery controls without exposing internal exception details. |
+| [bilfunn-prod/src/app/kvittering/loading.tsx](../src/app/kvittering/loading.tsx) | Server loading placeholder; keep its shape aligned with the final page and its status accessible. |
+| [bilfunn-prod/src/app/kvittering/page.tsx](../src/app/kvittering/page.tsx) | Page entry point; server rendering and server-owned data access. |

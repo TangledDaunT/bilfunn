@@ -1,4 +1,5 @@
 "use client";
+import { clientRequest, retryMessage } from "@/lib/client-request";
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
@@ -12,10 +13,19 @@ type Props = {
   introDays: number;
 };
 
-export default function CheckoutForm({ plate, email: initialEmail, methods, introLabel, renewalLabel, introDays }: Props) {
+export default function CheckoutForm({
+  plate,
+  email: initialEmail,
+  methods,
+  introLabel,
+  renewalLabel,
+  introDays,
+}: Props) {
   const router = useRouter();
-  const [email, setEmail] = useState(initialEmail);
-  const [method, setMethod] = useState<"vipps" | "card">(methods.vipps ? "vipps" : "card");
+  const [email] = useState(initialEmail);
+  const [method, setMethod] = useState<"vipps" | "card">(
+    methods.vipps ? "vipps" : "card",
+  );
   const [accepted, setAccepted] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [busy, setBusy] = useState(false);
@@ -23,28 +33,36 @@ export default function CheckoutForm({ plate, email: initialEmail, methods, intr
   async function submit(e: React.FormEvent) {
     e.preventDefault();
     const next: Record<string, string> = {};
-    if (!/^[^\s@]+@[^\s@]+\.[a-z]{2,}$/i.test(email.trim())) next.email = "Skriv inn en gyldig e-postadresse.";
+    if (!/^[^\s@]+@[^\s@]+\.[a-z]{2,}$/i.test(email.trim()))
+      next.email = "Skriv inn en gyldig e-postadresse.";
     if (!accepted) next.terms = "Du må godta vilkårene for å fortsette.";
     setErrors(next);
     if (Object.keys(next).length) return;
 
     setBusy(true);
     try {
-      const res = await fetch("/api/checkout", {
+      const res = await clientRequest("/api/checkout", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: email.trim(), method, plate }),
+        body: JSON.stringify({ email: email.trim(), method, plate, accepted }),
       });
       const data = await res.json();
       if (!res.ok) {
-        setErrors({ form: data.error || "Betalingen kunne ikke startes. Prøv igjen." });
+        setErrors({
+          form:
+            res.status === 429
+              ? retryMessage(res)
+              : "Betalingen kunne ikke bekreftes startet. Kontroller Min side før du prøver igjen.",
+        });
         setBusy(false);
         return;
       }
       if (data.redirectUrl) window.location.href = data.redirectUrl;
       else router.push(data.next || `/kvittering?nr=${plate}`);
     } catch {
-      setErrors({ form: "Nettverksfeil. Sjekk tilkoblingen og prøv igjen." });
+      setErrors({
+        form: "Vi fikk ikke bekreftet betalingsstatus. Kontroller Min side før du prøver igjen.",
+      });
       setBusy(false);
     }
   }
@@ -69,7 +87,7 @@ export default function CheckoutForm({ plate, email: initialEmail, methods, intr
           autoComplete="email"
           placeholder="navn@eksempel.no"
           value={email}
-          onChange={(e) => setEmail(e.target.value)}
+          readOnly
         />
         {errors.email && <span className="error">{errors.email}</span>}
         <span className="tiny">Kvittering og innloggingslenke sendes hit.</span>
@@ -79,7 +97,12 @@ export default function CheckoutForm({ plate, email: initialEmail, methods, intr
       <div className="grid g2" style={{ gap: 10, marginBottom: 14 }}>
         {methods.vipps && (
           <label className={`choice${method === "vipps" ? " on" : ""}`}>
-            <input type="radio" name="pm" checked={method === "vipps"} onChange={() => setMethod("vipps")} />
+            <input
+              type="radio"
+              name="pm"
+              checked={method === "vipps"}
+              onChange={() => setMethod("vipps")}
+            />
             <span>
               <strong style={{ color: "#ff5b24" }}>Vipps</strong>
               <br />
@@ -89,7 +112,12 @@ export default function CheckoutForm({ plate, email: initialEmail, methods, intr
         )}
         {methods.card && (
           <label className={`choice${method === "card" ? " on" : ""}`}>
-            <input type="radio" name="pm" checked={method === "card"} onChange={() => setMethod("card")} />
+            <input
+              type="radio"
+              name="pm"
+              checked={method === "card"}
+              onChange={() => setMethod("card")}
+            />
             <span>
               <strong>Bankkort</strong>
               <br />
@@ -100,22 +128,43 @@ export default function CheckoutForm({ plate, email: initialEmail, methods, intr
       </div>
 
       <label className="check" style={{ marginBottom: 14 }}>
-        <input type="checkbox" checked={accepted} onChange={(e) => setAccepted(e.target.checked)} />
+        <input
+          type="checkbox"
+          checked={accepted}
+          onChange={(e) => setAccepted(e.target.checked)}
+        />
         <span>
-          Jeg godtar vilkårene, samtykker til at tjenesten leveres umiddelbart, og bekrefter at abonnementet fornyes
-          automatisk til {renewalLabel} per måned etter {introDays} dager inntil jeg sier opp.
+          Jeg godtar vilkårene, samtykker til at tjenesten leveres umiddelbart,
+          og bekrefter at abonnementet fornyes automatisk til {renewalLabel} per
+          måned etter {introDays} dager inntil jeg sier opp.
         </span>
       </label>
-      {errors.terms && <span className="error" style={{ marginTop: -8, marginBottom: 10, display: "block" }}>{errors.terms}</span>}
+      {errors.terms && (
+        <span
+          className="error"
+          style={{ marginTop: -8, marginBottom: 10, display: "block" }}
+        >
+          {errors.terms}
+        </span>
+      )}
 
-      <button className="btn block lg" type="submit" disabled={busy}>
-        {busy ? <span className="spinner" /> : null} Betal {introLabel} og lås opp
+      {!methods.card && !methods.vipps && (
+        <p role="status">Betaling er midlertidig utilgjengelig.</p>
+      )}
+      <button
+        className="btn block lg"
+        type="submit"
+        disabled={busy || (!methods.card && !methods.vipps)}
+      >
+        {busy ? <span className="spinner" /> : null} Betal {introLabel} og lås
+        opp
       </button>
 
       {methods.simulated && (
         <p className="tiny center" style={{ marginTop: 10 }}>
-          Demomodus: ingen ekte betaling gjennomføres. Sett <code>PAYMENTS_MODE</code> og leverandørnøkler for å
-          aktivere Vipps eller kort.
+          Demomodus: ingen ekte betaling gjennomføres. Sett{" "}
+          <code>PAYMENTS_MODE</code> og leverandørnøkler for å aktivere Vipps
+          eller kort.
         </p>
       )}
     </form>

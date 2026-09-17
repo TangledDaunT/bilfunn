@@ -9,28 +9,64 @@ import { normalizePlate } from "@/lib/plate";
 
 export const dynamic = "force-dynamic";
 import { pageMetadata } from "@/lib/seo";
-export const metadata = pageMetadata("Betaling bekreftet", "Kvittering for Bilfunn-tilgang.", "/kvittering", false);
+export const metadata = pageMetadata(
+  "Betaling bekreftet",
+  "Kvittering for Skiltnummeret.no-tilgang.",
+  "/kvittering",
+  false,
+);
 
-export default async function ReceiptPage({ searchParams }: { searchParams: { nr?: string } }) {
+export default async function ReceiptPage({
+  searchParams: input,
+}: {
+  searchParams: Promise<{ nr?: string; checkout?: string }>;
+}) {
+  const searchParams = await input;
   const user = await getCurrentUser();
   if (!user) redirect("/logg-inn");
   const cfg = await getConfig();
   const sub = user.subscriptions[0];
+  const checkout = searchParams.checkout
+    ? await prisma.checkout.findFirst({
+        where: { id: searchParams.checkout, userId: user.id },
+      })
+    : null;
   const payment = await prisma.payment.findFirst({
-    where: { userId: user.id, status: "SUCCEEDED" },
+    where: {
+      userId: user.id,
+      status: "SUCCEEDED",
+      subscription: { checkoutId: checkout?.id ?? "none" },
+    },
     orderBy: { createdAt: "desc" },
   });
   const plate = normalizePlate(searchParams.nr || "");
 
+  if (!checkout || !payment)
+    return (
+      <div className="wrap">
+        <h1>Venter på betalingsbekreftelse</h1>
+        <p>
+          Tilgangen aktiveres når betalingsleverandøren bekrefter betalingen.
+          Last siden på nytt om litt.
+        </p>
+        <Link href="/konto">Min side</Link>
+      </div>
+    );
   return (
     <div className="wrap" style={{ paddingTop: 28, maxWidth: 560 }}>
       <div className="card center">
-        <span className="tag ok" style={{ fontSize: ".92rem", padding: "6px 13px" }}>
+        <span
+          className="tag ok"
+          style={{ fontSize: ".92rem", padding: "6px 13px" }}
+        >
           <Check /> Betaling gjennomført
         </span>
-        <h1 style={{ fontSize: "1.55rem", marginTop: 14 }}>Tilgangen er aktivert</h1>
+        <h1 style={{ fontSize: "1.55rem", marginTop: 14 }}>
+          Tilgangen er aktivert
+        </h1>
         <p className="muted">
-          Vi har belastet {formatOre(payment?.amountOre ?? cfg.introPriceOre)} og sendt kvittering til {user.email}.
+          Vi har belastet {formatOre(payment?.amountOre ?? cfg.introPriceOre)}{" "}
+          og sendt kvittering til {user.email}.
         </p>
         <div className="note" style={{ textAlign: "left", margin: "18px 0" }}>
           <div className="rowsplit">
@@ -53,7 +89,7 @@ export default async function ReceiptPage({ searchParams }: { searchParams: { nr
           )}
         </div>
         {plate ? (
-          <Link className="btn block lg" href={`/rapport/${plate}`}>
+          <Link prefetch={false} className="btn block lg" href={`/rapport/${plate}`}>
             Se kjøretøyrapporten
           </Link>
         ) : (
