@@ -304,3 +304,16 @@ Persist accepted commercial terms before calling a payment provider.
 | File | Responsibility and entry points |
 | --- | --- |
 | [bilfunn-prod/src/app/api/checkout/route.ts](../src/app/api/checkout/route.ts) | HTTP POST handler for `/api/checkout`; authorization, validation and failure policy are described above. |
+
+## 21. Protect account export and deletion with recent authentication
+
+Provide bounded user-owned exports and erase personal operational data safely.
+
+**Contracts and failure behavior.** Export only the requesting account. Deletion revokes sessions and queued personal payloads while retaining financial records needed for reconciliation; an already-dispatched email cannot be recalled.
+
+**Verification.** Integration tests cover recent authentication and queued payload erasure.
+
+| File | Responsibility and entry points |
+| --- | --- |
+| [bilfunn-prod/src/app/api/account/delete/route.ts](../src/app/api/account/delete/route.ts) | HTTP POST handler for `/api/account/delete`; authorization, validation and failure policy are described above. |
+| [bilfunn-prod/src/app/api/account/export/route.ts](../src/app/api/account/export/route.ts) | HTTP GET handler for `/api/account/export`; authorization, validation and failure policy are described above. |

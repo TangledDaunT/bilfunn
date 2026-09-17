@@ -1,37 +1,64 @@
-import { NextResponse } from "next/server";
+import { enforceRateLimit } from "@/lib/rateLimit";
+export const dynamic = "force-dynamic";
 import { prisma } from "@/lib/db";
-import { destroySession, getCurrentUser } from "@/lib/session";
-import { cancelSubscription } from "@/lib/billing";
-import { sendEmail } from "@/lib/email";
-import { track } from "@/lib/analytics";
-
-export const runtime = "nodejs";
-
-/**
- * GDPR erasure. Subscriptions are stopped, searches removed and the account
- * anonymised. Payments survive in anonymised form because the Bookkeeping Act
- * requires accounting records to be retained.
- */
-export async function POST() {
-  const user = await getCurrentUser();
-  if (!user) return NextResponse.json({ error: "Ikke innlogget." }, { status: 401 });
-
-  const sub = user.subscriptions[0];
-  if (sub && ["TRIALING", "ACTIVE", "PAST_DUE"].includes(sub.status)) {
-    await cancelSubscription(sub, user, "account_deleted");
-  }
-
-  await sendEmail("account_deleted", user.email, {}, null);
-  await prisma.search.deleteMany({ where: { userId: user.id } });
-  await prisma.loginToken.deleteMany({ where: { userId: user.id } });
-  await prisma.emailLog.updateMany({ where: { userId: user.id }, data: { userId: null, to: "[slettet]" } });
-  await prisma.payment.updateMany({ where: { userId: user.id }, data: {} });
-  await prisma.user.update({
-    where: { id: user.id },
-    data: { email: `slettet+${user.id}@bilfunn.invalid`, deletedAt: new Date() },
+import { destroySession, requireRecentUser } from "@/lib/session";
+import { enqueue } from "@/lib/jobs";
+import { endpoint } from "@/lib/http";
+export const POST = endpoint(async () => {
+  const user = await requireRecentUser();
+  await enforceRateLimit(`delete:${user.id}`, 5, 60_000);
+  await prisma.$transaction(async (tx) => {
+    await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtext(${user.id}))`;
+    const subs = await tx.subscription.findMany({
+      where: {
+        userId: user.id,
+        status: { in: ["ACTIVE", "TRIALING", "PAST_DUE", "CANCELED"] },
+      },
+    });
+    for (const sub of subs) {
+      await tx.subscription.update({
+        where: { id: sub.id },
+        data: {
+          status: "CANCELED",
+          canceledAt: new Date(),
+          cancelPending: true,
+          cancelReason: "account_deleted",
+        },
+      });
+      await enqueue(
+        "cancel",
+        { subscriptionId: sub.id },
+        `cancel:${sub.id}`,
+        tx,
+      );
+    }
+    await tx.search.deleteMany({ where: { userId: user.id } });
+    await tx.loginToken.deleteMany({ where: { userId: user.id } });
+    await tx.session.deleteMany({ where: { userId: user.id } });
+    await tx.emailLog.updateMany({
+      where: { userId: user.id },
+      data: { userId: null, to: "[deleted]", body: "[deleted]", error: null },
+    });
+    await tx.ticket.deleteMany({ where: { email: user.email } });
+    await tx.outbox.updateMany({
+      where: { kind: "email", userId: user.id },
+      data: { payload: {}, status: "DONE", completedAt: new Date() },
+    });
+    await tx.event.deleteMany({ where: { userId: user.id } });
+    await tx.user.update({
+      where: { id: user.id },
+      data: {
+        email: `deleted+${user.id}@skiltnummeret.invalid`,
+        deletedAt: new Date(),
+        emailVerifiedAt: null,
+        mfaSecret: null,
+        role: "CUSTOMER",
+      },
+    });
   });
-
-  await track("account_deleted", {});
-  destroySession();
-  return NextResponse.json({ ok: true });
-}
+  await destroySession();
+  return Response.json(
+    { ok: true, cancellationProcessing: true },
+    { status: 202 },
+  );
+});
