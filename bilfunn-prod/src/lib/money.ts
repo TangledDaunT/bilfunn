@@ -16,9 +16,14 @@ export function vatOf(amountOre: number, vatBps: number) {
   return Math.round(amountOre - amountOre / (1 + rate));
 }
 
-export function formatDate(d: Date | string | number, locale = "nb-NO", withTime = false) {
+export function formatDate(
+  d: Date | string | number,
+  locale = "nb-NO",
+  withTime = false,
+) {
   const date = new Date(d);
   return new Intl.DateTimeFormat(locale, {
+    timeZone: "Europe/Oslo",
     day: "2-digit",
     month: "short",
     year: "numeric",

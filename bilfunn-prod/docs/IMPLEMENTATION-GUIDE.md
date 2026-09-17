@@ -149,3 +149,18 @@ Centralize random tokens, constant-time comparison, hashing and encryption.
 | --- | --- |
 | [bilfunn-prod/src/lib/crypto.ts](../src/lib/crypto.ts) | Contracts: `sha256`, `hashIp`, `randomToken`, `randomCode`, `safeEqual`, `clientIp`. |
 | [bilfunn-prod/src/lib/seal.ts](../src/lib/seal.ts) | Contracts: `seal`, `unseal`. |
+
+## 10. Bound HTTP requests and standardize recoverable errors
+
+Give clients finite waits and preserve useful status/retry information without exposing internal errors.
+
+**Contracts and failure behavior.** JSON bodies have size/schema checks and a stream deadline. Browser mutations have a 15-second deadline. Payment response loss does not prove that no payment occurred. Money formatting is display-only; stored amounts remain ore.
+
+**Verification.** Request-recovery unit tests cover retry headers, abort signals, oversized bodies and error redaction.
+
+| File | Responsibility and entry points |
+| --- | --- |
+| [bilfunn-prod/src/lib/client-request.ts](../src/lib/client-request.ts) | Contracts: `clientRequest`, `retryMessage`. |
+| [bilfunn-prod/src/lib/http.ts](../src/lib/http.ts) | Contracts: `HttpError`, `readBody`, `jsonBody`, `endpoint`. |
+| [bilfunn-prod/src/lib/money.ts](../src/lib/money.ts) | Contracts: `ore`, `formatOre`, `vatOf`, `formatDate`. |
+| [bilfunn-prod/tests/unit/request-recovery.test.ts](../tests/unit/request-recovery.test.ts) | Executable regression scenarios for this section; use the isolated environment described above. |
