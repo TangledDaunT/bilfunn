@@ -829,3 +829,43 @@ Keep measured local results separate from approvals still needed for real billin
 | [bilfunn-prod/docs/readiness-2026-09-18/robots.txt](readiness-2026-09-18/robots.txt) | Configuration or support file for the behavior and checks described above. |
 | [bilfunn-prod/docs/readiness-2026-09-18/sitemap-pages.xml](readiness-2026-09-18/sitemap-pages.xml) | Configuration or support file for the behavior and checks described above. |
 | [bilfunn-prod/docs/readiness-2026-09-18/sitemap.xml](readiness-2026-09-18/sitemap.xml) | Configuration or support file for the behavior and checks described above. |
+
+## 50. Index the implementation guide and prototype branch handoff
+
+Give maintainers one entry point for all subsystems and verification instructions.
+
+**Contracts and failure behavior.** This branch is a 50-commit packaging of the existing implementation plus documentation. Intermediate snapshots are not certified independently buildable; validate the complete branch before deployment. Do not merge into main without a separate instruction.
+
+**Verification.** Verify exactly 50 commits above the original main, a clean working tree, unchanged main and matching local/remote prototype1 tips.
+
+| File | Responsibility and entry points |
+| --- | --- |
+| [bilfunn-prod/README.md](../README.md) | Maintainer guidance or gated editorial copy; retain its approval and verification limitations. |
+
+### Existing modules retained unchanged
+
+These source files were already present in the base commit and remain part of the implementation. Their inclusion here is documentation, not a claim of new implementation or fresh provider validation.
+
+| File | Responsibility |
+| --- | --- |
+| [bilfunn-prod/src/app/cookies/ResetConsent.tsx](../src/app/cookies/ResetConsent.tsx) | Explicit user action that clears saved consent; storage access occurs in the click handler. |
+| [bilfunn-prod/src/app/kjoretoy/[regnr]/UnlockButton.tsx](../src/app/kjoretoy/[regnr]/UnlockButton.tsx) | Legacy unlock UI retained in source; public vehicle routes now use route handlers, so do not assume it is mounted. |
+| [bilfunn-prod/src/app/not-found.tsx](../src/app/not-found.tsx) | Designed missing-page UI with a new plate-search entry point. |
+| [bilfunn-prod/src/app/rapport/[regnr]/PrintButton.tsx](../src/app/rapport/[regnr]/PrintButton.tsx) | Client print action for the current report; no independent data access or entitlement check. |
+| [bilfunn-prod/src/components/Plate.tsx](../src/components/Plate.tsx) | Registration-tag presentation shared by React pages; callers validate plate input separately. |
+| [bilfunn-prod/src/components/icons.tsx](../src/components/icons.tsx) | Contracts: `Check`, `Lock`, `Search`. |
+| [bilfunn-prod/src/lib/payments/mock.ts](../src/lib/payments/mock.ts) | Non-production payment adapter. Returned synthetic references do not prove a real charge or refund. |
+| [bilfunn-prod/src/lib/vehicle/simulated.ts](../src/lib/vehicle/simulated.ts) | Deterministic synthetic vehicle fixtures with simulated latency; excluded from production provider selection. |
+| [index.html](../../index.html) | Generated standalone app, concatenated from root src fragments as documented in the root README; edit fragments rather than this output. |
+| [src/01-shell-and-styles.html](../../src/01-shell-and-styles.html) | Prototype document shell, design tokens and styles; starts the concatenated browser app. |
+| [src/02-core.js](../../src/02-core.js) | Prototype localStorage, simulated clock, language, vehicle/payment simulation and subscription state machine; not production security. |
+| [src/03-home-search-paywall.js](../../src/03-home-search-paywall.js) | Prototype hash router, shared chrome, search preview and paywall. |
+| [src/04-checkout-report-account.js](../../src/04-checkout-report-account.js) | Prototype checkout, report, login and account/cancellation simulation; no real payment processing. |
+| [src/05-content-and-legal.js](../../src/05-content-and-legal.js) | Prototype informational pages and draft legal copy. |
+| [src/06-admin-and-boot.js](../../src/06-admin-and-boot.js) | Prototype admin simulation, seed data and browser boot; its demo access code is not production authentication. |
+
+### Documentation maintenance and release handoff
+
+Update the corresponding section when a contract, input, security condition, deadline, retry rule or publication gate changes. Add targeted inline comments for non-obvious invariants rather than restating every line. Update tests when behavior changes, and date new verification evidence instead of overwriting an old run's meaning.
+
+Current unresolved work is intentional and visible: real-provider payment/email/authentication checks, approved SVV mapping and data rights, legal identity and commercial-copy consistency, hosted pooling/cache/recovery tests and measured load. Do not replace those gates with successful local mocks or a clean build. Only prototype1 is requested for publication; main must remain untouched.

@@ -1,152 +1,49 @@
-# Bilfunn
+# Skiltnummeret.no
 
-Norwegian vehicle lookup platform. Next.js 14 (App Router) + PostgreSQL + Prisma,
-built to deploy on Vercel.
+Production application: Next.js 16, React 19, TypeScript, PostgreSQL/Prisma, Redis, and QStash. The separate prototype in the parent directory is unchanged.
 
-Search a Norwegian registration number → confirm the vehicle free → pay NOK 3 for
-3 days → full report → automatic NOK 249/month until cancelled.
+Pricing remains NOK 3 for three days, then NOK 249/month. Database configuration is authoritative; existing configuration is never overwritten by seeding.
 
----
+## Local setup
 
-## What is real and what is pending
+Use Node.js 22+. Run `npm ci`, complete the ignored `.env`, run `npm run config:check`, then `npm run db:migrate`, `npm run seed`, and `npm run dev`.
 
-| Integration | State | To activate |
-|---|---|---|
-| **Technical vehicle data** | **Real.** Statens vegvesen open API, `GET /enkeltoppslag/kjoretoydata?kjennemerke=…`, header `SVV-Authorization: Apikey <key>`. Free key, 50 000 calls/key/24h. | Set `SVV_API_KEY`. Apply: https://www.vegvesen.no/kjoretoy/kjop-og-salg/kjoretoyopplysninger/api-er-for-tekniske-kjoretoyopplysninger/ |
-| **Owner data** | **Not available on the open API.** Statens vegvesen state plainly that the open lookup returns no owner information and nothing that can identify an owner. | Requires the separate agreement-based interface (*Tekniske kjøretøyopplysninger med eierinformasjon*) or a commercial reseller. Then set `OWNER_API_KEY`, `OWNER_API_BASE_URL`, `OWNER_DATA_ENABLED=true` and confirm `mapOwner()` against a real payload. |
-| **Vipps MobilePay** | Recurring API v3 client written against the documented contract. | Merchant onboarding at portal.vippsmobilepay.com, then set the five `VIPPS_*` keys and `PAYMENTS_MODE=vipps` (or `both`). |
-| **Stripe (cards)** | Billing + Checkout written. | Set `STRIPE_*` keys and the two price IDs. |
-| **Email** | Resend. Without a key, every message is written to `EmailLog` and visible in `/admin?t=epost`. | Set `RESEND_API_KEY` and verify the sending domain. |
+The existing secret file is preserved. Next.js gives `.env.local` precedence over `.env`; remove conflicting settings yourself without sharing their values. Blank credentials disable optional services. Production startup rejects invalid security configuration. Configuration checks print field names and service status only.
 
-**Nothing is a dead end without keys.** Missing vehicle credentials fall back to a
-deterministic simulator (clearly labelled in the UI with a banner); missing payment
-credentials use `PAYMENTS_MODE=mock`, which completes the purchase inline so the
-full lifecycle — trial, renewal, dunning, cancellation — can be tested. Set the
-key and the same code path goes live. No code changes.
+Live vehicle lookup, storage, and publication are independent explicit gates. A standalone key does not establish permissions. Select `svv-technical` or `svv-owner` only after checking your actual service contract. The agreement/owner adapter currently supports only a validated technical response shape; personal owner fields remain disabled. Unknown payloads return temporary unavailability.
 
----
+## Contributor commands
 
-## Getting started
+`npm run typecheck`, `npm run lint`, `npm test`, `npm run test:integration`, `npm run build`, and `npm run test:e2e` provide local checks. Integration tests require an isolated `sk_test` PostgreSQL database. See [deployment and release instructions](DEPLOYMENT.md), [architecture](docs/ARCHITECTURE.md), and [release evidence](docs/RELEASE-STATUS.md).
 
-```sh
-cp .env.example .env.local        # fill in DATABASE_URL and SESSION_SECRET at minimum
-npm install
-npx prisma db push                # or: npx prisma migrate dev --name init
-npm run seed                      # config row + admin users (DEMO=1 adds demo customers)
-npm run dev
-```
+The test harness blanks every credential before starting test processes, including values that might otherwise come from `.env.local`. Example local database: `postgresql://sk_test@127.0.0.1:55473/sk_test`. Override with `TEST_DATABASE_URL` and `TEST_DIRECT_URL` for another isolated instance. Never use production data.
 
-Open http://localhost:3000. Search `AB12345`, unlock, and you land on the report.
-`/admin` is available to any email listed in `ADMIN_EMAILS` (log in first at `/logg-inn`).
+## Content
 
-Minimum required env: `DATABASE_URL`, `DIRECT_URL`, `SESSION_SECRET`,
-`NEXT_PUBLIC_BASE_URL`, `ADMIN_EMAILS`, `CRON_SECRET`.
+The twelve requested landing pages are present as unpublished Markdown under `content/pages/`. Add approved copy and valid frontmatter, then set `published: true`. Blog articles use `content/blogg/<slug>.md` and additionally require `author`. Unpublished, invalid, or empty content returns 404 and stays out of sitemaps. Vehicle metadata is generated from permitted technical fields, without competitor content.
 
----
+This code is not a claim of measured 500,000-user capacity. Deployment, private provider verification, restoration rehearsal on hosted infrastructure, and distributed staging tests remain release gates.
 
-## Architecture
+## Figma frontend and Google sign-in
 
-```
-src/
-  app/                      App Router pages + route handlers
-    page.tsx                homepage + plate search
-    kjoretoy/[regnr]/       free preview + paywall
-    rapport/[regnr]/        full report (server-enforced access check)
-    kasse/ kvittering/      checkout + confirmation
-    logg-inn/ konto/        magic-link auth, customer self-service
-    admin/                  10-tab operations console
-    api/
-      checkout              creates user, subscription, first charge
-      auth/*                magic link request + verify + logout
-      subscription/cancel   self-service cancel (POST) and resume (DELETE)
-      account/export|delete GDPR access + erasure
-      vehicle/[regnr]       JSON lookup, paywall enforced server-side
-      webhooks/stripe|vipps provider truth → our database
-      cron/billing          hourly lifecycle tick (vercel.json)
-  lib/
-    vehicle/                svv.ts · owner.ts · simulated.ts → one normalised model
-    payments/               stripe.ts · vipps.ts · mock.ts behind one interface
-    billing.ts              subscription state machine, access rule, allowances
-    email/                  templates + Resend sender, logged to DB first
-    config.ts               commercial rules from DB, editable in /admin
-    rateLimit.ts session.ts crypto.ts analytics.ts plate.ts money.ts
-```
+The production frontend uses the supplied [Figma copy](https://www.figma.com/design/D4oMLZtFheLtgWR8Nsb7Px/skiltnummeret---DESIGN--Copy-?node-id=0-1). Original exports are in `public/design/`; local Inter and Manrope fonts are in `public/fonts/`. Shared styles are in `public/design.css`. SVG icons are served as static files, without server-side rendering or an animation library. Short CSS transitions respect reduced-motion preferences.
 
-Three rules the code follows throughout:
+Google sign-in complements the Norwegian email-code flow. Configure a Google OAuth **Web application** with the exact redirect URL `<NEXT_PUBLIC_BASE_URL>/api/auth/google/callback`. Set `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET` privately in your ignored environment file or Vercel environment settings. Use separate development and production credentials; register each authorized callback explicitly. Apply `npm run db:migrate` before enabling Google. Existing email accounts require a recent email sign-in before Google can be linked, preventing silent account merging.
 
-1. **The database is the source of truth for access.** `hasAccess()` is the only
-   place that decides, and we never ask Stripe or Vipps at page load.
-2. **Vehicle and owner payloads are never persisted.** The search log stores the
-   plate, the outcome and the latency. Registration numbers are personal data
-   under Norwegian law, and IPs are stored only as a salted hash.
-3. **Paywalls are server-side.** The report page and the JSON endpoint both check
-   the subscription before the paid fields exist in the response.
+For vehicle access, paste the key into the existing ignored `.env` field appropriate to your explicitly selected provider (see `.env.example` and `DEPLOYMENT.md`). Do not paste credentials into chat or commit them. Run `npm run config:check` after editing. Live-provider tests remain pending until configured.
 
----
+For Vercel, use `bilfunn-prod/` as the application root, configure the required security/database/Redis variables and optional service credentials, apply migrations through a controlled release job, then create and verify a preview before promoting to production. See [frontend verification](docs/FRONTEND-VERIFICATION.md) for current results and blockers. A successful local build does not establish hosted production readiness.
 
-## Subscription lifecycle
+## Private vehicle API diagnostic
 
-`TRIALING → ACTIVE → PAST_DUE → EXPIRED`, with `CANCELED` reachable from the first
-three. Driven by `/api/cron/billing` (daily on Vercel Hobby; hourly when deployed on a plan
-that supports hourly cron jobs) plus provider webhooks.
+Run `node scripts/vehicle-api-preview.mjs` from this directory, then open `http://127.0.0.1:3102/`. Enter a known conventional registration number to inspect the complete response from the technical single-lookup API. The tool reads `SVV_API_KEY` using Next's environment precedence (`.env.local` overrides `.env`). It does not enable production lookup, persist responses, call the owner-information service, or change publication permissions.
 
-- Reminder email goes out `reminderHours` before the first renewal.
-- Vipps charges are created **ahead** of the due date: standard agreements require
-  at least a day's lead time, so the cron does not fire at the moment of expiry.
-- Vipps retries a failed charge internally for up to five days. We do not run a
-  competing retry loop against it; we wait for the terminal webhook. `graceDays`
-  defaults to 5 to match.
-- `recurring.agreement-stopped.v1` is load-bearing: users can cancel inside the
-  Vipps app, and without it we would keep serving someone who has cancelled.
-- Cancellation stops future charges immediately and keeps access to period end
-  (`cancelKeepsAccess`, configurable).
+This separate test interface binds only to loopback, refuses production/Vercel execution, validates the request origin and a per-run form token, escapes response content, uses no-store/noindex headers, limits response sizes, and permits at most 20 requests per start. Stop it with Ctrl+C when finished. An authentication error means the key must be checked against the technical API subscription; no successful live lookup is claimed until a real plate has been submitted and the returned data compared.
 
-Everything commercial — prices, days, search limits, grace, retry schedule — lives
-in the `Config` table and is editable at `/admin?t=innstillinger`. No deploy needed.
+To test live technical lookups through the normal homepage on port 3100, run `node scripts/dev-live.mjs`. This explicitly enables a development-only, loopback-bound report view using the private `SVV_API_KEY`, while retaining the isolated test database and disabling payments, owner access, persistence, and publication. It refuses production/Vercel use. The local report shows currently mapped fields; the separate port 3102 tool shows the complete technical response. Maximum 20 lookups per process, one at a time. Normal `test-local.mjs` runs continue to disable providers. SVV HTTP 204 responses are treated as missing vehicles rather than invalid JSON failures.
 
----
+## Maintainer documentation
 
-## Compliance built in
+Start with [the implementation guide](docs/IMPLEMENTATION-GUIDE.md) for the module/file index, request and data boundaries, failure behavior, and verification commands. [The dated readiness pass](docs/READINESS-PASS-2026-09-18.md) separates local test evidence from unresolved production gates. The repository-root [handoff](../AGENT-HANDOFF.md) records prior decisions and known mapping limitations.
 
-- Renewal price, renewal date and cancellation route appear on the same screen as
-  the pay button.
-- Explicit consent to immediate delivery, which is what makes the withdrawal-right
-  waiver valid for digital services.
-- Cancellation is self-service and takes the same number of clicks as subscribing.
-- Data export and erasure endpoints; payments are retained (anonymised) because
-  the Bookkeeping Act requires it.
-- Analytics load only after consent; the server-side event log never contains
-  owner names, addresses or card details.
-- The independence statement from Statens vegvesen is in the footer of every page
-  and in the report.
-
-**Do not enable `OWNER_DATA_ENABLED` without a written legal opinion.** Displaying
-a named individual's home address commercially is the highest-risk element here,
-and the risk sits with the business, not the data source.
-
----
-
-## Verifying the SVV field mapping
-
-`mapSvv()` walks a deeply nested response and every path is defensive, but the
-mappings should be checked against a real payload before launch — the response
-shape varies by vehicle type:
-
-```sh
-SVV_LOG_RAW=true npm run dev     # prints the raw JSON for each lookup
-```
-
-Compare against `src/lib/vehicle/svv.ts` and adjust. Fields that don't resolve
-render as omitted rows rather than "undefined", so a mismatch degrades quietly
-instead of breaking the page.
-
----
-
-## Notes
-
-- No caching of vehicle responses. If the contracted provider explicitly permits
-  it, add it in `lib/vehicle/index.ts` and nowhere else.
-- Rate limiting is Postgres-backed. Past a few requests/second, move it to Upstash
-  Redis; the call signature is unchanged.
-- The brand ("Bilfunn", the plate-derived mark, the colour tokens) is original
-  placeholder work. Nothing from skiltregisteret.no or Statens vegvesen is reused.
+The `prototype1` branch packages the pending implementation in 50 focused commits. Only the complete branch is validated; individual intermediate commits can depend on later members of the series. This branch is not approval for real payments or a request to merge into `main`.
