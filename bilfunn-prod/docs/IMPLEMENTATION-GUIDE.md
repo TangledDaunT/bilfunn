@@ -550,3 +550,18 @@ Provide bounded administrative lists and validated configuration updates.
 | [bilfunn-prod/src/app/admin/loading.tsx](../src/app/admin/loading.tsx) | Server loading placeholder; keep its shape aligned with the final page and its status accessible. |
 | [bilfunn-prod/src/app/admin/page.tsx](../src/app/admin/page.tsx) | Page entry point; server rendering and server-owned data access. |
 | [bilfunn-prod/src/app/api/admin/config/route.ts](../src/app/api/admin/config/route.ts) | HTTP POST handler for `/api/admin/config`; authorization, validation and failure policy are described above. |
+
+## 37. Render authenticated reports with quota checks and recovery states
+
+Protect report data and distinguish invalid inputs, missing vehicles and upstream failures.
+
+**Contracts and failure behavior.** Validate before streaming, check IP/subscription limits before disclosure, and do not charge quota for provider failures. Owner data remains explicitly unavailable.
+
+**Verification.** Malformed report paths return 404; provider-integrated paid-report verification is still a launch blocker.
+
+| File | Responsibility and entry points |
+| --- | --- |
+| [bilfunn-prod/src/app/rapport/[regnr]/error.tsx](../src/app/rapport/[regnr]/error.tsx) | Client error boundary; renders recovery controls without exposing internal exception details. |
+| [bilfunn-prod/src/app/rapport/[regnr]/layout.tsx](../src/app/rapport/[regnr]/layout.tsx) | Shared document/segment layout; validation here runs outside the segment loading boundary. |
+| [bilfunn-prod/src/app/rapport/[regnr]/loading.tsx](../src/app/rapport/[regnr]/loading.tsx) | Server loading placeholder; keep its shape aligned with the final page and its status accessible. |
+| [bilfunn-prod/src/app/rapport/[regnr]/page.tsx](../src/app/rapport/[regnr]/page.tsx) | Page entry point; server rendering and server-owned data access. |
