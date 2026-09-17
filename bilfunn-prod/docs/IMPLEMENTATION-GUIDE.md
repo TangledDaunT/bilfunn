@@ -263,3 +263,18 @@ Persist deduplication before transactional payment side effects.
 | --- | --- |
 | [bilfunn-prod/src/app/api/webhooks/stripe/route.ts](../src/app/api/webhooks/stripe/route.ts) | HTTP POST handler for `/api/webhooks/stripe`; authorization, validation and failure policy are described above. |
 | [bilfunn-prod/src/lib/payments/events.ts](../src/lib/payments/events.ts) | Contracts: `once`, `applyPaid`. |
+
+## 18. Reconcile missing and out-of-order provider events
+
+Recover provider truth without inventing new charges or trusting stale callbacks.
+
+**Contracts and failure behavior.** Use stable provider references and bounded reconciliation jobs. Refund, capture, cancellation and period ordering must preserve entitlement and ledger integrity.
+
+**Verification.** Vipps-state integration tests cover capture/refund and month-end behavior; live provider checks remain open.
+
+| File | Responsibility and entry points |
+| --- | --- |
+| [bilfunn-prod/src/app/api/webhooks/vipps/route.ts](../src/app/api/webhooks/vipps/route.ts) | HTTP POST handler for `/api/webhooks/vipps`; authorization, validation and failure policy are described above. |
+| [bilfunn-prod/src/lib/payments/reconcile.ts](../src/lib/payments/reconcile.ts) | Contracts: `reconcileStripeInvoice`, `reconciliationPage`, `reconcileCheckout`, `reconcileVippsPayment`. |
+| [bilfunn-prod/src/lib/payments/vipps-state.ts](../src/lib/payments/vipps-state.ts) | Contracts: `VippsCharge`, `reconcileVippsCharge`. |
+| [bilfunn-prod/tests/integration/vipps-state.test.ts](../tests/integration/vipps-state.test.ts) | Executable regression scenarios for this section; use the isolated environment described above. |

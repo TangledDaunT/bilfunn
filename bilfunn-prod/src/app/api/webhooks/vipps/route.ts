@@ -1,126 +1,82 @@
+export const dynamic = "force-dynamic";
 import { NextResponse } from "next/server";
-import { createHmac, timingSafeEqual } from "crypto";
+import { z } from "zod";
 import { prisma } from "@/lib/db";
 import { env } from "@/lib/env";
-import { getConfig } from "@/lib/config";
-import { markPastDue, markRenewed, recordPayment } from "@/lib/billing";
-import { sendEmail } from "@/lib/email";
-import { track } from "@/lib/analytics";
-
+import { verifyVipps } from "@/lib/payments/vipps-signature";
+import { getVippsResource } from "@/lib/payments/vipps";
+import { once } from "@/lib/payments/events";
+import { reconcileVippsCharge } from "@/lib/payments/vipps-state";
+import { sha256 } from "@/lib/crypto";
+import { endpoint, readBody, HttpError } from "@/lib/http";
 export const runtime = "nodejs";
-
-/**
- * Vipps MobilePay Recurring webhooks.
- *
- * `recurring.agreement-stopped.v1` is the important one: a user can stop the
- * agreement inside the Vipps app, and without handling it we would keep granting
- * access to someone who has already cancelled. Charge outcomes also arrive here,
- * because Vipps charges settle asynchronously rather than at creation.
- */
-function verify(raw: string, header: string | null) {
-  if (!env.payments.vipps.webhookSecret) return true; // unset in dev
-  if (!header) return false;
-  const expected = createHmac("sha256", env.payments.vipps.webhookSecret).update(raw).digest("base64");
-  const a = Buffer.from(expected);
-  const b = Buffer.from(header);
-  return a.length === b.length && timingSafeEqual(a, b);
-}
-
-export async function POST(req: Request) {
-  const raw = await req.text();
-  if (!verify(raw, req.headers.get("authorization") || req.headers.get("x-vipps-signature"))) {
-    return NextResponse.json({ error: "invalid_signature" }, { status: 401 });
+const Body = z.object({
+  eventType: z.string(),
+  agreementId: z.string().regex(/^[a-zA-Z0-9_-]+$/),
+  chargeId: z
+    .string()
+    .regex(/^[a-zA-Z0-9_-]+$/)
+    .optional(),
+  chargeType: z.enum(["INITIAL", "RECURRING", "UNSCHEDULED"]).optional(),
+  occurred: z.string().datetime({ offset: true }),
+  msn: z.string(),
+  currency: z.string().optional(),
+  transactionId: z.string().nullable().optional(),
+});
+export const POST = endpoint(async (req) => {
+  if (!env.payments.vipps.webhookSecret)
+    throw new HttpError(503, "vipps_disabled");
+  const raw = await readBody(req, 256_000);
+  if (
+    !verifyVipps(
+      raw,
+      req.headers,
+      `${env.baseUrl}/api/webhooks/vipps`,
+      env.payments.vipps.webhookSecret,
+    )
+  )
+    throw new HttpError(401, "invalid_signature");
+  let decoded: unknown;
+  try {
+    decoded = JSON.parse(raw);
+  } catch {
+    throw new HttpError(400, "invalid_json");
   }
-
-  const body = JSON.parse(raw || "{}");
-  const eventName: string = body.name || body.eventType || "";
-  const agreementId: string | undefined = body.agreementId || body.data?.agreementId;
-  const cfg = await getConfig();
-
-  if (!agreementId) return NextResponse.json({ received: true });
-
-  const sub = await prisma.subscription.findFirst({
-    where: { providerAgreementId: agreementId },
-    include: { user: true },
+  const parsed = Body.safeParse(decoded);
+  if (!parsed.success) throw new HttpError(400, "invalid_event");
+  const body = parsed.data;
+  if (body.msn !== env.payments.vipps.msn)
+    throw new HttpError(403, "merchant_mismatch");
+  const checkout = await prisma.checkout.findFirst({
+    where: { provider: "VIPPS", subscriptionId: body.agreementId },
   });
-  if (!sub) return NextResponse.json({ received: true });
-
-  switch (eventName) {
-    case "recurring.agreement-activated.v1": {
-      await prisma.subscription.update({ where: { id: sub.id }, data: { status: "TRIALING" } });
-      const payment = await recordPayment({
-        userId: sub.userId,
-        subscriptionId: sub.id,
-        kind: "INTRO",
-        status: "SUCCEEDED",
-        amountOre: cfg.introPriceOre,
-        provider: "VIPPS",
-        providerPaymentId: body.chargeId ?? null,
+  if (!checkout) throw new HttpError(503, "checkout_reconciliation_pending");
+  const agreement = await getVippsResource(`agreements/${body.agreementId}`);
+  const charge = body.chargeId
+    ? await getVippsResource(
+        `agreements/${body.agreementId}/charges/${body.chargeId}`,
+      )
+    : null;
+  const eventId = sha256(
+    `${body.agreementId}:${body.chargeId || ""}:${body.eventType}:${body.transactionId || body.occurred}`,
+  );
+  await once("VIPPS", eventId, async (tx) => {
+    if (charge)
+      await reconcileVippsCharge(tx, checkout, agreement.status, charge);
+    if (["STOPPED", "EXPIRED"].includes(agreement.status))
+      await tx.subscription.updateMany({
+        where: { providerAgreementId: body.agreementId },
+        data: {
+          status: "CANCELED",
+          canceledAt: new Date(body.occurred),
+          cancelPending: false,
+        },
       });
-      await sendEmail(
-        "payment_receipt",
-        sub.user.email,
-        { amountOre: payment.amountOre, vatOre: payment.vatOre, receipt: payment.receiptNumber, at: payment.createdAt },
-        sub.userId
-      );
-      await track("checkout_completed", { provider: "vipps" }, { userId: sub.userId });
-      break;
-    }
-
-    case "recurring.agreement-stopped.v1":
-    case "recurring.agreement-expired.v1": {
-      // The user cancelled in the Vipps app. Honour it immediately.
-      await prisma.subscription.update({
-        where: { id: sub.id },
-        data: { status: "CANCELED", canceledAt: new Date(), cancelAt: sub.periodEnd, cancelReason: "vipps_app" },
+    if (["REJECTED", "EXPIRED", "STOPPED"].includes(agreement.status))
+      await tx.checkout.updateMany({
+        where: { id: checkout.id, status: "PENDING" },
+        data: { status: "EXPIRED" },
       });
-      await sendEmail("cancellation", sub.user.email, { until: sub.periodEnd }, sub.userId);
-      await track("subscription_canceled", { source: "vipps_app" }, { userId: sub.userId });
-      break;
-    }
-
-    case "recurring.charge-captured.v1": {
-      const amount = Number(body.amount ?? sub.priceOre);
-      await markRenewed(sub.id, new Date(), amount);
-      await recordPayment({
-        userId: sub.userId,
-        subscriptionId: sub.id,
-        kind: "RENEWAL",
-        status: "SUCCEEDED",
-        amountOre: amount,
-        provider: "VIPPS",
-        providerPaymentId: body.chargeId ?? null,
-      });
-      await sendEmail(
-        "renewal_success",
-        sub.user.email,
-        { amountOre: amount, periodEnd: new Date(Date.now() + 30 * 86400000) },
-        sub.userId
-      );
-      break;
-    }
-
-    case "recurring.charge-failed.v1":
-    case "recurring.charge-creation-failed.v1": {
-      await markPastDue(sub.id, new Date(), cfg.graceDays, cfg.retryDays[0] ?? 1);
-      await recordPayment({
-        userId: sub.userId,
-        subscriptionId: sub.id,
-        kind: "RENEWAL",
-        status: "FAILED",
-        amountOre: sub.priceOre,
-        provider: "VIPPS",
-        failureCode: body.failureReason ?? "vipps_charge_failed",
-      });
-      await sendEmail(
-        "payment_failed",
-        sub.user.email,
-        { graceUntil: new Date(Date.now() + cfg.graceDays * 86400000), link: `${env.baseUrl}/konto` },
-        sub.userId
-      );
-      break;
-    }
-  }
-
+  });
   return NextResponse.json({ received: true });
-}
+});
