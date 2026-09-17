@@ -4,7 +4,13 @@ import Script from "next/script";
 import { useEffect, useState } from "react";
 
 /** GA4 loads only after consent, and never before. */
-export default function Analytics({ ga4 }: { ga4?: string }) {
+export default function Analytics({
+  ga4,
+  nonce,
+}: {
+  ga4?: string;
+  nonce?: string;
+}) {
   const [ok, setOk] = useState(false);
 
   useEffect(() => {
@@ -24,8 +30,12 @@ export default function Analytics({ ga4 }: { ga4?: string }) {
   if (!ga4 || !ok) return null;
   return (
     <>
-      <Script src={`https://www.googletagmanager.com/gtag/js?id=${ga4}`} strategy="afterInteractive" />
-      <Script id="ga4" strategy="afterInteractive">
+      <Script
+        nonce={nonce}
+        src={`https://www.googletagmanager.com/gtag/js?id=${ga4}`}
+        strategy="afterInteractive"
+      />
+      <Script nonce={nonce} id="ga4" strategy="afterInteractive">
         {`window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments)}gtag('js',new Date());gtag('config','${ga4}',{anonymize_ip:true});`}
       </Script>
     </>

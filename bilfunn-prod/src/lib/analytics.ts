@@ -8,13 +8,22 @@ import { prisma } from "./db";
 export async function track(
   name: string,
   props: Record<string, unknown> = {},
-  meta: { userId?: string | null; sessionId?: string | null } = {}
+  meta: { userId?: string | null; sessionId?: string | null } = {},
 ) {
   try {
     await prisma.event.create({
       data: {
         name,
-        props: props as any,
+        props: Object.fromEntries(
+          Object.entries(props).filter(
+            ([k, v]) =>
+              ["provider", "method", "amountOre", "source", "code"].includes(
+                k,
+              ) &&
+              (typeof v === "number" ||
+                (typeof v === "string" && v.length <= 50)),
+          ),
+        ) as any,
         userId: meta.userId ?? null,
         sessionId: meta.sessionId ?? null,
       },

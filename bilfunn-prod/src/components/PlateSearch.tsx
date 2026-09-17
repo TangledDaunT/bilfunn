@@ -1,12 +1,16 @@
 "use client";
 
-import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { normalizePlate, isValidPlate, prettyPlate } from "@/lib/plate";
 import { Search } from "./icons";
 
-export default function PlateSearch({ autoFocus = false, cta = "Finn eier" }: { autoFocus?: boolean; cta?: string }) {
-  const router = useRouter();
+export default function PlateSearch({
+  autoFocus = false,
+  cta = "Finn eier",
+}: {
+  autoFocus?: boolean;
+  cta?: string;
+}) {
   const [value, setValue] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
@@ -22,9 +26,11 @@ export default function PlateSearch({ autoFocus = false, cta = "Finn eier" }: { 
     const plate = normalizePlate(value);
     if (!plate) return setError("Skriv inn et registreringsnummer.");
     if (!isValidPlate(plate))
-      return setError("Ugyldig format. Norske skilt har to bokstaver og fem sifre, for eksempel AB 12345.");
+      return setError(
+        "Ugyldig format. Norske skilt har to bokstaver og fem sifre, for eksempel AB 12345.",
+      );
     setBusy(true);
-    router.push(`/kjoretoy/${plate}`);
+    window.location.assign(`/${plate}`);
   }
 
   return (
@@ -36,7 +42,10 @@ export default function PlateSearch({ autoFocus = false, cta = "Finn eier" }: { 
         <span className="eu" aria-hidden>
           <span className="stars">
             ★★★
-            <br />★&nbsp;&nbsp;★<br />★★★
+            <br />
+            ★&nbsp;&nbsp;★
+            <br />
+            ★★★
           </span>
           <span className="n">N</span>
         </span>
@@ -58,7 +67,12 @@ export default function PlateSearch({ autoFocus = false, cta = "Finn eier" }: { 
           {error}
         </span>
       )}
-      <button className="btn block lg" type="submit" disabled={busy} style={{ marginTop: 12 }}>
+      <button
+        className="btn block lg"
+        type="submit"
+        disabled={busy}
+        style={{ marginTop: 12 }}
+      >
         {busy ? <span className="spinner" /> : <Search />} {cta}
       </button>
     </form>

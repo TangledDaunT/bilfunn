@@ -10,7 +10,7 @@ export default function CookieBar() {
 
   useEffect(() => {
     try {
-      if (!localStorage.getItem(KEY)) setShow(true);
+      if (!localStorage.getItem(KEY)) queueMicrotask(() => setShow(true));
     } catch {
       /* storage blocked — show nothing rather than break */
     }
@@ -20,7 +20,12 @@ export default function CookieBar() {
     try {
       localStorage.setItem(
         KEY,
-        JSON.stringify({ necessary: true, analytics, marketing: analytics, at: Date.now() })
+        JSON.stringify({
+          necessary: true,
+          analytics,
+          marketing: analytics,
+          at: Date.now(),
+        }),
       );
     } catch {}
     setShow(false);
@@ -32,8 +37,10 @@ export default function CookieBar() {
     <div className="cookiebar" role="dialog" aria-label="Informasjonskapsler">
       <div className="in">
         <p>
-          <strong>Informasjonskapsler.</strong> Vi bruker nødvendige informasjonskapsler for innlogging og betaling.
-          Analyse og markedsføring settes bare hvis du samtykker. <Link href="/cookies">Les mer</Link>
+          <strong>Informasjonskapsler.</strong> Vi bruker nødvendige
+          informasjonskapsler for innlogging og betaling. Analyse og
+          markedsføring settes bare hvis du samtykker.{" "}
+          <Link href="/cookies">Les mer</Link>
         </p>
         <div style={{ display: "flex", gap: 8, flexWrap: "wrap" }}>
           <button className="btn sm ghost" onClick={() => choose(false)}>

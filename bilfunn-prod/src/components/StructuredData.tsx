@@ -1,22 +1,24 @@
+import { headers } from "next/headers";
 import { env } from "@/lib/env";
 
-export default function StructuredData() {
+export default async function StructuredData() {
   const siteUrl = env.baseUrl;
   const data = {
     "@context": "https://schema.org",
     "@graph": [
       {
         "@type": "Organization",
-        name: "Bilfunn",
+        name: "Skiltnummeret.no",
         url: siteUrl,
         logo: `${siteUrl}/bilfunn-mark.svg`,
-        email: "support@bilfunn.no",
+        email: "support@skiltnummeret.no",
       },
       {
         "@type": "WebSite",
-        name: "Bilfunn",
+        name: "Skiltnummeret.no",
         url: siteUrl,
-        description: "Søk opp norske registreringsnummer og få kjøretøyopplysninger.",
+        description:
+          "Søk opp norske registreringsnummer og få kjøretøyopplysninger.",
         potentialAction: {
           "@type": "SearchAction",
           target: `${siteUrl}/kjoretoy/{search_term_string}`,
@@ -26,5 +28,13 @@ export default function StructuredData() {
     ],
   };
 
-  return <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(data) }} />;
+  return (
+    <script
+      nonce={(await headers()).get("x-nonce") ?? undefined}
+      type="application/ld+json"
+      dangerouslySetInnerHTML={{
+        __html: JSON.stringify(data).replace(/</g, "\\u003c"),
+      }}
+    />
+  );
 }

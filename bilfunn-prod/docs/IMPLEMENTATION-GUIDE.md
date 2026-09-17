@@ -676,3 +676,19 @@ Handle root/segment failures and provide stable page placeholders.
 | [bilfunn-prod/src/components/PageSkeleton.tsx](../src/components/PageSkeleton.tsx) | React UI component; server-rendered presentation. |
 | `bilfunn-prod/src/middleware.ts` (removed) | Retired file; its replacement and behavior are described in this section. |
 | [bilfunn-prod/src/proxy.ts](../src/proxy.ts) | Contracts: `proxy`, `config`. |
+
+## 44. Respect consent and keep structured data and search inputs safe
+
+Retain client interactivity only where state or browser events require it.
+
+**Contracts and failure behavior.** Read consent after hydration, validate public analytics IDs, escape structured data and validate search navigation. Never put private credentials in client props.
+
+**Verification.** Security tests and clean-browser CSP/hydration checks cover these boundaries.
+
+| File | Responsibility and entry points |
+| --- | --- |
+| [bilfunn-prod/src/components/Analytics.tsx](../src/components/Analytics.tsx) | React UI component; client interaction/state boundary. |
+| [bilfunn-prod/src/components/CookieBar.tsx](../src/components/CookieBar.tsx) | React UI component; client interaction/state boundary. |
+| [bilfunn-prod/src/components/PlateSearch.tsx](../src/components/PlateSearch.tsx) | React UI component; client interaction/state boundary. |
+| [bilfunn-prod/src/components/StructuredData.tsx](../src/components/StructuredData.tsx) | React UI component; server-rendered presentation. |
+| [bilfunn-prod/src/lib/analytics.ts](../src/lib/analytics.ts) | Contracts: `track`. |
