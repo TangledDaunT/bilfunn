@@ -1,35 +1,60 @@
 {
-  "name": "bilfunn",
+  "name": "skiltnummeret",
   "version": "1.0.0",
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "prisma generate && next build",
+    "build": "prisma generate && next build --webpack",
     "start": "next start",
-    "lint": "next lint",
+    "lint": "eslint src scripts tests",
     "postinstall": "prisma generate",
     "db:push": "prisma db push",
     "db:migrate": "prisma migrate deploy",
     "db:studio": "prisma studio",
-    "seed": "tsx prisma/seed.ts"
+    "seed": "tsx prisma/seed.ts",
+    "typecheck": "next typegen && tsc --noEmit",
+    "test": "vitest run",
+    "test:integration": "vitest run --config vitest.integration.config.mts",
+    "test:e2e": "playwright test",
+    "config:check": "tsx scripts/check-config.ts",
+    "admin:provision": "tsx scripts/provision-admin.ts",
+    "vehicles:import": "tsx scripts/import-vehicles.ts",
+    "security:secrets": "node scripts/scan-secrets.mjs",
+    "format": "prettier --write src scripts tests"
   },
   "dependencies": {
+    "@next/env": "16.3.5",
     "@prisma/client": "^5.22.0",
+    "@upstash/qstash": "^2.11.3",
+    "@upstash/redis": "^1.38.4",
+    "@vercel/functions": "^3.9.8",
+    "gray-matter": "^4.0.3",
     "jose": "^5.9.6",
-    "next": "14.2.18",
-    "react": "^18.3.1",
-    "react-dom": "^18.3.1",
+    "marked": "^18.0.13",
+    "next": "16.3.5",
+    "otpauth": "^9.5.2",
+    "react": "^19.2.4",
+    "react-dom": "^19.2.4",
     "resend": "^4.0.1",
+    "sanitize-html": "^2.17.7",
     "stripe": "^17.4.0",
     "zod": "^3.23.8"
   },
   "devDependencies": {
+    "@playwright/test": "^1.63.0",
     "@types/node": "^22.9.0",
-    "@types/react": "^18.3.12",
-    "@types/react-dom": "^18.3.1",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "@types/sanitize-html": "^2.16.1",
+    "eslint": "^9.39.5",
+    "eslint-config-next": "^16.3.5",
+    "prettier": "^3.9.7",
     "prisma": "^5.22.0",
     "tsx": "^4.19.2",
-    "typescript": "^5.6.3"
+    "typescript": "^5.6.3",
+    "vitest": "^5.0.1"
   },
-  "engines": { "node": ">=20" }
+  "engines": {
+    "node": ">=22.0.0"
+  }
 }

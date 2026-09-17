@@ -42,3 +42,18 @@ Separate the standalone prototype from the production application and preserve t
 | [AGENTS.md](../../AGENTS.md) | Maintainer guidance or gated editorial copy; retain its approval and verification limitations. |
 | [bilfunn-prod/AGENTS.md](../AGENTS.md) | Maintainer guidance or gated editorial copy; retain its approval and verification limitations. |
 | [bilfunn-prod/CLAUDE.md](../CLAUDE.md) | Maintainer guidance or gated editorial copy; retain its approval and verification limitations. |
+
+## 02. Pin the application toolchain and quality checks
+
+Make installation, generation and static analysis repeatable with the resolved dependency tree.
+
+**Contracts and failure behavior.** Use Node 22 or newer and npm ci. The lockfile is authoritative; do not infer framework behavior from older Next.js versions.
+
+**Verification.** npm run lint; npm run typecheck; npm run build.
+
+| File | Responsibility and entry points |
+| --- | --- |
+| [bilfunn-prod/eslint.config.mjs](../eslint.config.mjs) | Configuration or support file for the behavior and checks described above. |
+| [bilfunn-prod/package-lock.json](../package-lock.json) | Configuration or support file for the behavior and checks described above. |
+| [bilfunn-prod/package.json](../package.json) | Configuration or support file for the behavior and checks described above. |
+| [bilfunn-prod/tsconfig.json](../tsconfig.json) | Configuration or support file for the behavior and checks described above. |
