@@ -389,3 +389,17 @@ Keep registration validation, provider selection and free-preview boundaries exp
 | [bilfunn-prod/src/lib/vehicle/index.ts](../src/lib/vehicle/index.ts) | Contracts: `lookupVehicle`, `freePreview`. |
 | [bilfunn-prod/src/lib/vehicle/types.ts](../src/lib/vehicle/types.ts) | Contracts: `VehicleOwner`, `Vehicle`, `LookupResult`. |
 | [bilfunn-prod/tests/unit/vehicle-preview.test.ts](../tests/unit/vehicle-preview.test.ts) | Executable regression scenarios for this section; use the isolated environment described above. |
+
+## 27. Map technical provider responses and isolate owner-service access
+
+Handle the actual SVV response shape without assuming technical access grants owner access.
+
+**Contracts and failure behavior.** Treat HTTP 204 as not found, bound upstream calls and never persist raw responses. Owner mapping, imported-date semantics and complete tyre/rim arrays remain incomplete.
+
+**Verification.** Use only supplied registration examples for live checks; mapping tests do not certify a provider contract.
+
+| File | Responsibility and entry points |
+| --- | --- |
+| [bilfunn-prod/src/lib/vehicle/maskinporten.ts](../src/lib/vehicle/maskinporten.ts) | Contracts: `maskinportenToken`. |
+| [bilfunn-prod/src/lib/vehicle/owner.ts](../src/lib/vehicle/owner.ts) | Contracts: `lookupOwnerVehicle`. |
+| [bilfunn-prod/src/lib/vehicle/svv.ts](../src/lib/vehicle/svv.ts) | Contracts: `lookupSvv`, `mapSvv`. |

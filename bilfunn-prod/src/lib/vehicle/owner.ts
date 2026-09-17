@@ -1,60 +1,54 @@
 import { env } from "../env";
-import type { VehicleOwner } from "./types";
-
-/**
- * Owner information.
- *
- * The open Statens vegvesen API deliberately returns no owner data. Owner fields
- * come from either:
- *   a) "Tekniske kjøretøyopplysninger med eierinformasjon" — requires a signed
- *      agreement with Statens vegvesen, an organisation number and authenticated
- *      access (test access is requested separately from production), or
- *   b) a commercial reseller with the equivalent rights.
- *
- * Until that is in place, OWNER_DATA_ENABLED stays false and the paid report
- * simply renders without the owner block. Do not enable it without written
- * confirmation of which fields may be displayed commercially.
- *
- * Wire your provider's response into `mapOwner` and nothing else changes.
- */
-export async function lookupOwner(plate: string): Promise<VehicleOwner | null> {
-  if (!env.owner.enabled || !env.owner.key || !env.owner.baseUrl) return null;
-
-  const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), 5000);
+import { maskinportenToken } from "./maskinporten";
+import { mapSvv } from "./svv";
+import type { LookupResult } from "./types";
+// Enable only after contract and field mapping have been validated against the selected service.
+export async function lookupOwnerVehicle(plate: string): Promise<LookupResult> {
+  const started = Date.now();
   try {
-    const res = await fetch(`${env.owner.baseUrl}?kjennemerke=${encodeURIComponent(plate)}`, {
-      headers: { Authorization: `Bearer ${env.owner.key}`, Accept: "application/json" },
-      signal: controller.signal,
+    const url = new URL(env.owner.baseUrl);
+    if (url.protocol !== "https:" || !url.hostname.endsWith(".vegvesen.no"))
+      throw new Error("Invalid provider host");
+    url.searchParams.set("kjennemerke", plate);
+    const res = await fetch(url, {
+      headers: {
+        Authorization: `Bearer ${await maskinportenToken()}`,
+        Accept: "application/json",
+      },
+      signal: AbortSignal.timeout(5000),
       cache: "no-store",
+      redirect: "error",
     });
-    if (!res.ok) return null;
-    return mapOwner(await res.json());
+    if (res.status === 404)
+      return {
+        ok: false,
+        code: "NOT_FOUND",
+        status: 404,
+        latencyMs: Date.now() - started,
+      };
+    if (!res.ok) throw new Error("Provider unavailable");
+    const raw = await res.json();
+    // Reject unknown response contracts instead of publishing a guessed mapping.
+    if (!Array.isArray(raw.kjoretoydataListe))
+      throw new Error("Provider mapping requires validation");
+    if (!raw.kjoretoydataListe.length)
+      return {
+        ok: false,
+        code: "NOT_FOUND",
+        status: 404,
+        latencyMs: Date.now() - started,
+      };
+    const vehicle = mapSvv(plate, raw.kjoretoydataListe[0]);
+    vehicle.source = "OWNER_API";
+    // Personal data is intentionally excluded until an independently verified owner mapper exists.
+    vehicle.owner = null;
+    return { ok: true, vehicle, latencyMs: Date.now() - started };
   } catch {
-    return null;
-  } finally {
-    clearTimeout(timer);
+    return {
+      ok: false,
+      code: "PROVIDER_ERROR",
+      status: 503,
+      latencyMs: Date.now() - started,
+    };
   }
-}
-
-// Adjust to the contracted provider's payload once credentials exist.
-export function mapOwner(raw: any): VehicleOwner | null {
-  const eier = raw?.eierskap?.eier ?? raw?.owner ?? null;
-  if (!eier) return null;
-  const person = eier?.person;
-  const org = eier?.enhet ?? eier?.organisasjon;
-  const adresse = eier?.adresse ?? person?.adresse ?? org?.adresse ?? {};
-  return {
-    name:
-      org?.navn ??
-      [person?.fornavn, person?.mellomnavn, person?.etternavn].filter(Boolean).join(" ") ??
-      null,
-    type: org ? "COMPANY" : "PERSON",
-    address: adresse?.adresselinje1 ?? adresse?.gateadresse ?? null,
-    postalCode: adresse?.postnummer ?? null,
-    city: adresse?.poststed ?? null,
-    ownedSince: raw?.eierskap?.fomTidspunkt ?? null,
-    ownerCount: raw?.antallEiere ?? null,
-    history: raw?.eierhistorikk ?? undefined,
-  };
 }
