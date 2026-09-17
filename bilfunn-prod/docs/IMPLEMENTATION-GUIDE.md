@@ -193,3 +193,19 @@ Replace email-only trust with single-use challenges and server-side opaque sessi
 | [bilfunn-prod/src/app/api/auth/verify/route.ts](../src/app/api/auth/verify/route.ts) | HTTP POST handler for `/api/auth/verify`; authorization, validation and failure policy are described above. |
 | [bilfunn-prod/src/app/api/session/route.ts](../src/app/api/session/route.ts) | HTTP GET handler for `/api/session`; authorization, validation and failure policy are described above. |
 | [bilfunn-prod/src/lib/session.ts](../src/lib/session.ts) | Contracts: `createSession`, `getSession`, `destroySession`, `getUserId`, `getCurrentUser`, `requireAdmin`, `requireRecentUser`. |
+
+## 13. Add verified Google sign-in with safe account linking
+
+Implement OIDC login while protecting existing verified accounts.
+
+**Contracts and failure behavior.** Validate PKCE, state, nonce, issuer, audience and signature. Linking an existing account requires a matching recent session; bounded redirects stay local.
+
+**Verification.** Google unit and integration tests pass with mocked code exchange; real OAuth remains unverified.
+
+| File | Responsibility and entry points |
+| --- | --- |
+| [bilfunn-prod/src/app/api/auth/google/callback/route.ts](../src/app/api/auth/google/callback/route.ts) | HTTP GET handler for `/api/auth/google/callback`; authorization, validation and failure policy are described above. |
+| [bilfunn-prod/src/app/api/auth/google/start/route.ts](../src/app/api/auth/google/start/route.ts) | HTTP GET handler for `/api/auth/google/start`; authorization, validation and failure policy are described above. |
+| [bilfunn-prod/src/lib/google-auth.ts](../src/lib/google-auth.ts) | Contracts: `googleConfigured`, `googleRedirect`, `oauthCookie`, `safeLoginNext`, `googleIdentity`, `exchangeGoogleCode`. |
+| [bilfunn-prod/tests/integration/google-auth.test.ts](../tests/integration/google-auth.test.ts) | Executable regression scenarios for this section; use the isolated environment described above. |
+| [bilfunn-prod/tests/unit/google-auth.test.ts](../tests/unit/google-auth.test.ts) | Executable regression scenarios for this section; use the isolated environment described above. |
