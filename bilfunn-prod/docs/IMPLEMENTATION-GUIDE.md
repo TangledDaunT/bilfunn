@@ -466,3 +466,20 @@ Make publication policy editable by authenticated administrators with recent MFA
 | [bilfunn-prod/src/app/api/admin/vehicles/route.ts](../src/app/api/admin/vehicles/route.ts) | HTTP POST handler for `/api/admin/vehicles`; authorization, validation and failure policy are described above. |
 | [bilfunn-prod/src/lib/seo-reindex.ts](../src/lib/seo-reindex.ts) | Contracts: `reindex`. |
 | [bilfunn-prod/src/lib/seo.ts](../src/lib/seo.ts) | Contracts: `pageMetadata`. |
+
+## 32. Render shared public HTML with matching content security hashes
+
+Serve session-free public pages with shared design markup and explicit metadata.
+
+**Contracts and failure behavior.** Escape dynamic values, serialize structured data safely and hash the exact inline payload. Static marketing copy remains a documented commercial-consistency gap.
+
+**Verification.** Browser tests verify public CSP and operation without JavaScript.
+
+| File | Responsibility and entry points |
+| --- | --- |
+| [bilfunn-prod/src/components/DesignCta.tsx](../src/components/DesignCta.tsx) | React UI component; server-rendered presentation. |
+| [bilfunn-prod/src/components/DesignFaq.tsx](../src/components/DesignFaq.tsx) | React UI component; client interaction/state boundary. |
+| [bilfunn-prod/src/components/Footer.tsx](../src/components/Footer.tsx) | React UI component; server-rendered presentation. |
+| [bilfunn-prod/src/components/Header.tsx](../src/components/Header.tsx) | React UI component; server-rendered presentation. |
+| [bilfunn-prod/src/lib/design.ts](../src/lib/design.ts) | Contracts: `icon`, `logo`, `designHeader`, `designFooter`, `plateForm`, `priceCopy`, `searchCta`, `questions`, `faqMarkup`, `homepage`. |
+| [bilfunn-prod/src/lib/public-html.ts](../src/lib/public-html.ts) | Contracts: `escapeHtml`, `searchForm`, `publicHtml`, `publicError`, `breadcrumb`. |
