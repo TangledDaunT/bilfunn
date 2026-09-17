@@ -1,34 +1,30 @@
-import { NextResponse } from "next/server";
-import { lookupVehicle, freePreview } from "@/lib/vehicle";
-import { normalizePlate } from "@/lib/plate";
-import { getCurrentUser } from "@/lib/session";
-import { getConfig } from "@/lib/config";
-import { hasAccess } from "@/lib/billing";
-import { rateLimit } from "@/lib/rateLimit";
-import { clientIp, hashIp } from "@/lib/crypto";
-
-export const runtime = "nodejs";
-
-/**
- * JSON lookup used by the client where needed. Paid fields are stripped unless
- * the caller has an active subscription — the paywall is enforced here, on the
- * server, not in the component that renders it.
- */
-export async function GET(req: Request, { params }: { params: { regnr: string } }) {
-  const cfg = await getConfig();
-  const ip = clientIp(req.headers);
-  const limit = await rateLimit(`api:vehicle:${hashIp(ip)}`, cfg.ipSearchesPerHour, 3600_000);
-  if (!limit.ok) {
-    return NextResponse.json({ error: "rate_limited" }, { status: 429, headers: { "Retry-After": "3600" } });
+export const dynamic = "force-dynamic";
+import { publicRecord } from "@/lib/vehicle/public-store";
+import { PublicData } from "@/lib/vehicle/public-model";
+import { normalizePlate, isValidPlate } from "@/lib/plate";
+import { HttpError } from "@/lib/http";
+export async function GET(
+  _req: Request,
+  { params }: { params: Promise<{ regnr: string }> },
+) {
+  try {
+    const plate = normalizePlate((await params).regnr);
+    if (!isValidPlate(plate)) throw new HttpError(400, "invalid_plate");
+    const row = await publicRecord(plate, _req.headers);
+    return Response.json(PublicData.parse(row.data), {
+      headers: {
+        "Cache-Control": "public, max-age=0, must-revalidate",
+        "Vercel-CDN-Cache-Control": `public, s-maxage=${Math.max(0, Math.min(60, Math.floor((row.expiresAt.getTime() - Date.now()) / 1000)))}`,
+        "Vercel-Cache-Tag": `vehicle:${plate},vehicles`,
+      },
+    });
+  } catch (e) {
+    return Response.json(
+      { error: e instanceof HttpError ? e.code : "unavailable" },
+      {
+        status: e instanceof HttpError ? e.status : 503,
+        headers: { "Cache-Control": "no-store", ...(e instanceof HttpError && e.retryAfter ? { "Retry-After": String(e.retryAfter) } : {}) },
+      },
+    );
   }
-
-  const plate = normalizePlate(params.regnr);
-  const result = await lookupVehicle(plate);
-  if (!result.ok) return NextResponse.json({ error: result.code }, { status: result.status });
-
-  const user = await getCurrentUser();
-  const access = hasAccess(user?.subscriptions?.[0] ?? null, cfg.cancelKeepsAccess);
-  return NextResponse.json(access ? result.vehicle : freePreview(result.vehicle), {
-    headers: { "Cache-Control": "no-store" },
-  });
 }

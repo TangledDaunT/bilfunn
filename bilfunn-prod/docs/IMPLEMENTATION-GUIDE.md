@@ -483,3 +483,22 @@ Serve session-free public pages with shared design markup and explicit metadata.
 | [bilfunn-prod/src/components/Header.tsx](../src/components/Header.tsx) | React UI component; server-rendered presentation. |
 | [bilfunn-prod/src/lib/design.ts](../src/lib/design.ts) | Contracts: `icon`, `logo`, `designHeader`, `designFooter`, `plateForm`, `priceCopy`, `searchCta`, `questions`, `faqMarkup`, `homepage`. |
 | [bilfunn-prod/src/lib/public-html.ts](../src/lib/public-html.ts) | Contracts: `escapeHtml`, `searchForm`, `publicHtml`, `publicError`, `breadcrumb`. |
+
+## 33. Route canonical vehicle searches through public HTML handlers
+
+Replace conflicting page routes with complete public responses and canonical redirects.
+
+**Contracts and failure behavior.** Normalize and validate plates before lookup; preserve honest 404/410/503 responses and never read sessions on cacheable public routes. Public API fields differ from paid-report data.
+
+**Verification.** E2E tests verify canonical redirects, missing pages and disabled-provider responses.
+
+| File | Responsibility and entry points |
+| --- | --- |
+| [bilfunn-prod/src/app/[slug]/route.ts](../src/app/[slug]/route.ts) | HTTP GET handler for `/[slug]`; authorization, validation and failure policy are described above. |
+| [bilfunn-prod/src/app/api/vehicle/[regnr]/route.ts](../src/app/api/vehicle/[regnr]/route.ts) | HTTP GET handler for `/api/vehicle/[regnr]`; authorization, validation and failure policy are described above. |
+| `bilfunn-prod/src/app/kjoretoy/[regnr]/page.tsx` (removed) | Retired file; its replacement and behavior are described in this section. |
+| [bilfunn-prod/src/app/kjoretoy/[regnr]/route.ts](../src/app/kjoretoy/[regnr]/route.ts) | HTTP GET handler for `/kjoretoy/[regnr]`; authorization, validation and failure policy are described above. |
+| [bilfunn-prod/src/app/kjoretoy/route.ts](../src/app/kjoretoy/route.ts) | HTTP GET handler for `/kjoretoy`; authorization, validation and failure policy are described above. |
+| `bilfunn-prod/src/app/page.tsx` (removed) | Retired file; its replacement and behavior are described in this section. |
+| [bilfunn-prod/src/app/route.ts](../src/app/route.ts) | HTTP GET handler for `/`; authorization, validation and failure policy are described above. |
+| [bilfunn-prod/src/app/sok/route.ts](../src/app/sok/route.ts) | HTTP GET handler for `/sok`; authorization, validation and failure policy are described above. |
