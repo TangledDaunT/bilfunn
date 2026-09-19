@@ -1,7 +1,6 @@
 import { beforeAll, beforeEach, afterAll, it, expect, vi } from "vitest";
 const lookup = vi.hoisted(() => vi.fn());
 vi.mock("../../src/lib/vehicle/index", () => ({ lookupVehicle: lookup }));
-vi.mock("../../src/lib/session", () => ({ getCurrentUser: async () => null }));
 import { prisma } from "../../src/lib/db";
 import { env } from "../../src/lib/env";
 import {
@@ -42,15 +41,15 @@ beforeEach(async () => {
   lookup.mockResolvedValue({ ok: true, vehicle });
 });
 afterAll(() => prisma.$disconnect());
-it("keeps stored vehicle data behind login without leaking protected fields", async () => {
+it("renders cached public data without leaking protected fields", async () => {
   const row = await refreshVehicle("AB12345", false);
   const response = await GET(new Request("https://local/AB12345"), {
     params: Promise.resolve({ slug: "AB12345" }),
   });
-  expect(response.status).toBe(303);
-  expect(response.headers.get("location")).toContain("/logg-inn?next=");
+  expect(response.status).toBe(200);
   const html = await response.text();
-  expect(response.headers.get("Cache-Control")).toContain("no-store");
+  expect(response.headers.get("Vercel-CDN-Cache-Control")).toContain("s-maxage=300");
+  expect(lookup).toHaveBeenCalledTimes(1);
   expect(JSON.stringify(row!.data)).not.toMatch(/SECRET PERSON|SECRET VIN/);
   expect(html).not.toMatch(/SECRET PERSON|SECRET VIN|"owner"|"vin"/);
   const sitemap = await vehicleSitemap(
@@ -71,14 +70,14 @@ it("does not change lastmod when provider JSON key ordering changes", async () =
   expect(next!.changedAt.toISOString()).toBe(first!.changedAt.toISOString());
   expect(next!.fetchedAt.getTime()).toBeGreaterThan(first!.fetchedAt.getTime());
 });
-it("requires login for thin records and excludes them from sitemaps", async () => {
+it("renders thin records as noindex and excludes them from sitemaps", async () => {
   lookup.mockResolvedValue({ ok: true, vehicle: { ...vehicle, model: null } });
   const row = await refreshVehicle("AB12345", false);
   const response = await GET(new Request("https://local/AB12345"), {
     params: Promise.resolve({ slug: "AB12345" }),
   });
-  expect(response.status).toBe(303);
-  expect(response.headers.get("X-Robots-Tag")).toBe("noindex, nofollow");
+  expect(response.status).toBe(200);
+  expect(await response.text()).toContain('name="robots" content="noindex, follow"');
   expect(
     await (
       await vehicleSitemap(Math.floor((row!.catalogId - 1) / 10000))

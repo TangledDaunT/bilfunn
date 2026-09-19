@@ -32,7 +32,7 @@ export const questions = [
   ],
   [
     "Kan jeg se hvem som eier bilen?",
-    "Eieropplysninger: not available in this data source. Betaling gir ikke tilgang til eieropplysninger.",
+    "Eieropplysninger er en separat, tilgangsbegrenset tjeneste. Navn, adresser og andre personopplysninger vises aldri på offentlige sider.",
     "Data og personvern",
   ],
   [
@@ -77,7 +77,7 @@ export const homepage = `<div class="design-home">
     "01",
     "f6c3f",
     "Finn riktig kjøretøy",
-    "Logg inn og skriv inn skiltnummeret for å se tilgjengelige kjøretøyopplysninger.",
+    "Skriv inn skiltnummeret for å se tilgjengelige tekniske kjøretøyopplysninger.",
   ],
   [
     "02",

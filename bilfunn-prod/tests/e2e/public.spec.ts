@@ -44,8 +44,7 @@ test("disabled, invalid, and unpublished pages return honest statuses", async ({
   request,
 }) => {
   const denied = await request.get("/AB12345", { maxRedirects: 0 });
-  expect(denied.status()).toBe(303);
-  expect(denied.headers().location).toContain("/logg-inn?next=");
+  expect(denied.status()).toBe(503);
   expect((await request.get("/api/vehicle/AB12345")).status()).toBe(401);
   expect((await request.get("/AB123456789")).status()).toBe(404);
   expect((await request.get("/hvem-eier-bilen")).status()).toBe(404);

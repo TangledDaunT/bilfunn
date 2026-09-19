@@ -34,6 +34,12 @@ For vehicle access, paste the key into the existing ignored `.env` field appropr
 
 For Vercel, use `bilfunn-prod/` as the application root, configure the required security/database/Redis variables and optional service credentials, apply migrations through a controlled release job, then create and verify a preview before promoting to production. See [frontend verification](docs/FRONTEND-VERIFICATION.md) for current results and blockers. A successful local build does not establish hosted production readiness.
 
+## Public vehicle pages and administrator setup
+
+Valid registration-number URLs render approved, cached technical vehicle data publicly when publication is enabled. A stored `PublicVehicle` snapshot is reused until its authorized retention window expires; only then may the provider be called again. Suppressed, expired, unverified, or insufficient records are not published or added to vehicle sitemaps. Owner names, addresses, lessee data, related-person data, and telephone numbers are never included in public HTML, metadata, structured data, or sitemaps.
+
+Administrators use the email-code login followed by TOTP MFA; they do not use the demo password login. Add the address to `ADMIN_EMAILS`, then run `npm run admin:provision -- admin@example.com /private/secure/admin-mfa.txt` from `bilfunn-prod/`. Import the generated URI into an authenticator, remove the private file after verification, and complete the MFA challenge at `/admin/mfa`. `DEMO_LOGIN_EMAIL` and `DEMO_LOGIN_PASSWORD_HASH` are only for a controlled non-admin demo account and cannot authenticate an administrator.
+
 ## Private vehicle API diagnostic
 
 Run `node scripts/vehicle-api-preview.mjs` from this directory, then open `http://127.0.0.1:3102/`. Enter a known conventional registration number to inspect the complete response from the technical single-lookup API. The tool reads `SVV_API_KEY` using Next's environment precedence (`.env.local` overrides `.env`). It does not enable production lookup, persist responses, call the owner-information service, or change publication permissions.
